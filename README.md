@@ -1,13 +1,15 @@
-# Gold & Silver Price - Web App
+# Personal Finance - Web App
 
-Web interface for the Gold & Silver Price COT Data application. This web app uses the same backend API as the mobile app.
+Web interface for the Personal Finance application. This web app uses the same backend API as the mobile app.
 
 ## Features
 
-- **Data Ingestion**: Fetch and ingest COT data from CFTC API
-- **View Data**: Browse latest and historical COT data with date filtering
-- **Trend Charts**: Visualize field trends with Highcharts
-- **Price/Volume Overlay**: Add price and volume data to trend charts
+- **Home Page**: Navigation hub for different financial analysis views
+- **COT Data**: Commitment of Traders data analysis
+  - Data Ingestion: Fetch and ingest COT data from CFTC API
+  - View Data: Browse latest and historical COT data with date filtering
+  - Trend Charts: Visualize field trends with Highcharts
+  - Price/Volume Overlay: Add price and volume data to trend charts
 
 ## Getting Started
 
@@ -47,6 +49,16 @@ npm run build
 npm start
 ```
 
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+Quick deploy to Vercel:
+1. Go to [vercel.com](https://vercel.com) and sign up
+2. Import this repository
+3. Set Root Directory to `.` (root of this repo)
+4. Deploy!
+
 ## Tech Stack
 
 - **Next.js 14** - React framework
@@ -62,6 +74,8 @@ web-app/
 ├── app/
 │   ├── layout.tsx      # Root layout
 │   ├── page.tsx        # Home page
+│   ├── cot/
+│   │   └── page.tsx    # COT data page
 │   └── globals.css     # Global styles
 ├── components/
 │   ├── IngestionSection.tsx  # Data ingestion UI
@@ -80,4 +94,3 @@ web-app/
 - `GET /cot/commodity/{name}/latest` - Get latest data
 - `GET /cot/commodity/{name}/trend/{field}` - Get trend data
 - `GET /prices/historical/{symbol}` - Get historical price data
-

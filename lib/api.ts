@@ -1,6 +1,23 @@
 // API Configuration
 const BASE_URL = 'https://finance-backend-ou68.onrender.com/api/v1'
 
+// Helper to get headers with auth token
+function getHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  }
+  
+  // Get token from localStorage
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+  }
+  
+  return headers
+}
+
 // Types
 export interface CotDataPoint {
   commodity_name?: string
@@ -79,9 +96,7 @@ export async function ingestCotData(
 
   const response = await fetch(`${BASE_URL}/cot/ingest?${params.toString()}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getHeaders(),
   })
 
   if (!response.ok) {
@@ -110,7 +125,9 @@ export async function getCotDataByCommodity(
   commodityName: string
 ): Promise<CotDataPoint[]> {
   const encoded = encodeURIComponent(commodityName)
-  const response = await fetch(`${BASE_URL}/cot/commodity/${encoded}`)
+  const response = await fetch(`${BASE_URL}/cot/commodity/${encoded}`, {
+    headers: getHeaders(),
+  })
 
   if (!response.ok) {
     throw new Error(`Failed to fetch COT data: ${response.statusText}`)
@@ -141,7 +158,10 @@ export async function getCotDataByDateRange(
   params.append('end_date', endDate)
 
   const response = await fetch(
-    `${BASE_URL}/cot/commodity/${encoded}/date-range?${params.toString()}`
+    `${BASE_URL}/cot/commodity/${encoded}/date-range?${params.toString()}`,
+    {
+      headers: getHeaders(),
+    }
   )
 
   if (!response.ok) {
@@ -167,7 +187,9 @@ export async function getLatestCotData(
   commodityName: string
 ): Promise<CotDataPoint | null> {
   const encoded = encodeURIComponent(commodityName)
-  const response = await fetch(`${BASE_URL}/cot/commodity/${encoded}/latest`)
+  const response = await fetch(`${BASE_URL}/cot/commodity/${encoded}/latest`, {
+    headers: getHeaders(),
+  })
 
   if (!response.ok) {
     throw new Error(`Failed to fetch latest COT data: ${response.statusText}`)
@@ -197,7 +219,10 @@ export async function getTrendData(
   params.append('limit', limit.toString())
 
   const response = await fetch(
-    `${BASE_URL}/cot/commodity/${encodedCommodity}/trend/${encodedField}?${params.toString()}`
+    `${BASE_URL}/cot/commodity/${encodedCommodity}/trend/${encodedField}?${params.toString()}`,
+    {
+      headers: getHeaders(),
+    }
   )
 
   if (!response.ok) {
@@ -286,7 +311,10 @@ export async function getHistoricalPriceData(
 
   try {
     const response = await fetch(
-      `https://finance-backend-ou68.onrender.com/api/v1/prices/historical/${encoded}?${params.toString()}`
+      `https://finance-backend-ou68.onrender.com/api/v1/prices/historical/${encoded}?${params.toString()}`,
+      {
+        headers: getHeaders(),
+      }
     )
 
     if (!response.ok) {
