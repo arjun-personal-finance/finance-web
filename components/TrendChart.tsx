@@ -137,7 +137,8 @@ export default function TrendChart({
               title: { text: 'Price ($)' },
               labels: {
                 formatter: function () {
-                  return this.value.toFixed(2)
+                  const value = typeof this.value === 'number' ? this.value : parseFloat(String(this.value)) || 0
+                  return value.toFixed(2)
                 },
               },
               opposite: true,
