@@ -16,6 +16,11 @@ export interface LoginResponse {
   role?: string
   user_role?: string
   userRole?: string
+  user?: {
+    role?: string
+    user_role?: string
+    userRole?: string
+  }
 }
 
 /**
