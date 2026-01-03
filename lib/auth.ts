@@ -50,8 +50,10 @@ export function getUserRole(): string | null {
  * Check if user has admin role
  */
 export function isAdmin(): boolean {
-  const role = getUserRole()?.toLowerCase()
-  return role === 'admin' || role === 'administrator'
+  const role = getUserRole()?.toLowerCase()?.trim()
+  const result = role === 'admin' || role === 'administrator'
+  console.log('isAdmin check: role=', role, 'result=', result)
+  return result
 }
 
 /**
@@ -117,12 +119,34 @@ export async function login(credentials: LoginCredentials): Promise<string> {
   }
 
   // Extract role from response (try multiple field names)
-  const role = data.role || data.user_role || data.userRole
+  let role = data.role || data.user_role || data.userRole || data.user?.role || data.user?.user_role
+
+  // If role not found in response, try to extract from JWT token
+  if (!role && token) {
+    try {
+      // JWT tokens have 3 parts separated by dots: header.payload.signature
+      const parts = token.split('.')
+      if (parts.length >= 2) {
+        // Decode the payload (second part)
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+        role = payload.role || payload.user_role || payload.userRole || payload.roles?.[0]
+      }
+    } catch (e) {
+      console.warn('Failed to extract role from JWT token:', e)
+    }
+  }
 
   setAuthToken(token)
   if (role) {
     setUserRole(role)
+    console.log('Role stored after login:', role, 'isAdmin:', isAdmin())
+  } else {
+    console.warn('No role found in login response or JWT token. Full response:', data)
   }
+  
+  // Debug: Log stored role
+  console.log('Stored role after login:', getUserRole(), 'isAdmin:', isAdmin())
+  
   return token
 }
 
