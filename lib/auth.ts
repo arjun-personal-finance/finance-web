@@ -1,6 +1,7 @@
 // Authentication utilities and token management
 
 const TOKEN_KEY = 'auth_token'
+const ROLE_KEY = 'user_role'
 
 export interface LoginCredentials {
   email?: string
@@ -12,6 +13,9 @@ export interface LoginResponse {
   token?: string
   access_token?: string
   message?: string
+  role?: string
+  user_role?: string
+  userRole?: string
 }
 
 /**
@@ -21,6 +25,33 @@ export function setAuthToken(token: string): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(TOKEN_KEY, token)
   }
+}
+
+/**
+ * Store user role in localStorage
+ */
+export function setUserRole(role: string): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(ROLE_KEY, role)
+  }
+}
+
+/**
+ * Get user role from localStorage
+ */
+export function getUserRole(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(ROLE_KEY)
+  }
+  return null
+}
+
+/**
+ * Check if user has admin role
+ */
+export function isAdmin(): boolean {
+  const role = getUserRole()?.toLowerCase()
+  return role === 'admin' || role === 'administrator'
 }
 
 /**
@@ -34,11 +65,12 @@ export function getAuthToken(): string | null {
 }
 
 /**
- * Remove authentication token
+ * Remove authentication token and role
  */
 export function removeAuthToken(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(ROLE_KEY)
   }
 }
 
@@ -84,7 +116,13 @@ export async function login(credentials: LoginCredentials): Promise<string> {
     throw new Error('No token received from server')
   }
 
+  // Extract role from response (try multiple field names)
+  const role = data.role || data.user_role || data.userRole
+
   setAuthToken(token)
+  if (role) {
+    setUserRole(role)
+  }
   return token
 }
 

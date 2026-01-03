@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import IngestionSection from '@/components/IngestionSection'
 import ViewDataSection from '@/components/ViewDataSection'
-import { isAuthenticated } from '@/lib/auth'
+import { isAuthenticated, isAdmin } from '@/lib/auth'
 
 export default function CotPage() {
   const router = useRouter()
@@ -37,7 +37,16 @@ export default function CotPage() {
           </div>
         </div>
 
-        <IngestionSection />
+        {isAdmin() ? (
+          <IngestionSection />
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-2 text-gray-900">Ingest Data</h2>
+            <p className="text-gray-600">
+              This feature is only available to administrators.
+            </p>
+          </div>
+        )}
         <ViewDataSection />
       </div>
     </main>
