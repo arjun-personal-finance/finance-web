@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useMemo } from 'react'
+import { useRef, useEffect, useMemo, useState } from 'react'
 import Highcharts from 'highcharts/highstock'
 import HighchartsReact from 'highcharts-react-official'
 import type { TrendDataPoint, HistoricalPricePoint } from '@/lib/api'
@@ -22,6 +22,8 @@ export default function TrendChart({
   priceVolumeData,
 }: TrendChartProps) {
   const chartRef = useRef<HighchartsReact.RefObject>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Log price/volume data for debugging
   useEffect(() => {
@@ -110,10 +112,62 @@ export default function TrendChart({
     }
   }, [trendDataMap, priceVolumeData])
 
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return
+
+    if (!isFullscreen) {
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen()
+      } else if ((containerRef.current as any).webkitRequestFullscreen) {
+        (containerRef.current as any).webkitRequestFullscreen()
+      } else if ((containerRef.current as any).mozRequestFullScreen) {
+        (containerRef.current as any).mozRequestFullScreen()
+      } else if ((containerRef.current as any).msRequestFullscreen) {
+        (containerRef.current as any).msRequestFullscreen()
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen()
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen()
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen()
+      }
+    }
+  }
+
+  // Handle fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      )
+      setIsFullscreen(isCurrentlyFullscreen)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange)
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange)
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
+    }
+  }, [])
+
   const options: Highcharts.Options = {
     chart: {
       type: 'line',
-      height: hasVolume ? 500 : 400,
+      height: isFullscreen && typeof window !== 'undefined' ? window.innerHeight - 100 : (hasVolume ? 500 : 400),
     },
     title: {
       text: `${commodityName} - Multiple Fields${
@@ -150,42 +204,26 @@ export default function TrendChart({
           },
         },
         opposite: false,
-        height: hasVolume ? '50%' : '100%',
-        top: '0%',
       },
-      ...(hasPriceVolume
-        ? [
-            {
-              title: { text: 'Price ($)' },
-              labels: {
-                formatter: function () {
-                  const value = typeof this.value === 'number' ? this.value : parseFloat(String(this.value)) || 0
-                  return value.toFixed(2)
-                },
-              },
-              opposite: true,
-              height: hasVolume ? '50%' : '100%',
-              top: '0%',
-              tickAmount: 5, // Reduced tick marks
-            } as Highcharts.YAxisOptions,
-          ]
-        : []),
-      ...(hasVolume
-        ? [
-            {
-              title: { text: 'Volume' },
-              labels: {
-                formatter: function () {
-                  return this.value.toLocaleString()
-                },
-              },
-              opposite: false,
-              height: '25%',
-              top: '75%',
-              offset: 0,
-            } as Highcharts.YAxisOptions,
-          ]
-        : []),
+      {
+        title: { text: 'Price ($)' },
+        labels: {
+          formatter: function () {
+            const val = typeof this.value === 'number' ? this.value : parseFloat(String(this.value))
+            return '$' + val.toFixed(2)
+          },
+        },
+        opposite: true,
+      },
+      {
+        title: { text: 'Volume' },
+        labels: {
+          formatter: function () {
+            return this.value.toLocaleString()
+          },
+        },
+        opposite: true,
+      },
     ],
     legend: {
       enabled: true,
@@ -260,13 +298,25 @@ export default function TrendChart({
               name: 'Volume',
               type: 'column' as const,
               data: volumeData,
-              yAxis: hasPriceVolume ? 2 : 1,
+              yAxis: 2,
               color: '#9E9E9E',
             } as Highcharts.SeriesOptionsType,
           ]
         : []),
     ],
   }
+
+  // Update chart height when fullscreen changes
+  useEffect(() => {
+    if (chartRef.current?.chart && typeof window !== 'undefined') {
+      const chart = chartRef.current.chart
+      chart.setSize(
+        undefined,
+        isFullscreen ? window.innerHeight - 100 : (hasVolume ? 500 : 400),
+        false
+      )
+    }
+  }, [isFullscreen, hasVolume])
 
   // Update chart when data changes
   useEffect(() => {
@@ -308,7 +358,7 @@ export default function TrendChart({
           name: 'Volume',
           type: 'column',
           data: volumeData,
-          yAxis: hasPriceVolume ? 2 : 1,
+          yAxis: 2,
           color: '#9E9E9E',
         } as Highcharts.SeriesOptionsType, false)
       }
@@ -318,7 +368,26 @@ export default function TrendChart({
   }, [fieldSeries, priceData, volumeData, hasPriceVolume, hasVolume])
 
   return (
-    <div className="bg-white p-4 rounded-md">
+    <div 
+      ref={containerRef}
+      className={`bg-white rounded-md ${isFullscreen ? 'fixed inset-0 z-50 p-4' : 'p-4'} relative`}
+    >
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-2 right-2 z-10 bg-gray-200 hover:bg-gray-300 rounded p-2 transition-colors"
+        title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+        aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+      >
+        {isFullscreen ? (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        )}
+      </button>
       <HighchartsReact
         ref={chartRef}
         highcharts={Highcharts}

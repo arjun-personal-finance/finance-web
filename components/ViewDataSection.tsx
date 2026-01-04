@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   getCotDataByCommodity,
   getCotDataByDateRange,
@@ -118,6 +118,7 @@ export default function ViewDataSection() {
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [isFieldSelectorExpanded, setIsFieldSelectorExpanded] = useState(false)
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const loadData = async () => {
     setIsLoading(true)
@@ -228,10 +229,25 @@ export default function ViewDataSection() {
   }, [commodity, selectedFields, showPriceVolume])
 
   useEffect(() => {
+    // Clear any existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
     if (selectedFields.length > 0) {
-      loadTrendData()
+      // Debounce the loadTrendData call by 200ms
+      debounceTimerRef.current = setTimeout(() => {
+        loadTrendData()
+      }, 200)
     } else {
       setTrendDataMap({})
+    }
+
+    // Cleanup function to clear timer on unmount or dependency change
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
     }
   }, [commodity, selectedFields, loadTrendData])
 
