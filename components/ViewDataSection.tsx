@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   getCotDataByCommodity,
   getCotDataByDateRange,
@@ -110,12 +110,14 @@ export default function ViewDataSection() {
   const [error, setError] = useState<string | null>(null)
 
   // Trend chart state
-  const [selectedField, setSelectedField] = useState('')
-  const [trendData, setTrendData] = useState<TrendDataPoint[]>([])
+  const [selectedFields, setSelectedFields] = useState<string[]>([])
+  const [trendDataMap, setTrendDataMap] = useState<Record<string, TrendDataPoint[]>>({})
   const [isTrendLoading, setIsTrendLoading] = useState(false)
   const [showPriceVolume, setShowPriceVolume] = useState(false)
   const [priceVolumeData, setPriceVolumeData] = useState<HistoricalPricePoint[]>([])
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null)
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [isFieldSelectorExpanded, setIsFieldSelectorExpanded] = useState(false)
 
   const loadData = async () => {
     setIsLoading(true)
@@ -159,41 +161,63 @@ export default function ViewDataSection() {
     }
   }
 
-  const loadTrendData = async () => {
-    if (!selectedField) {
-      setTrendData([])
+  const loadTrendData = useCallback(async () => {
+    if (selectedFields.length === 0) {
+      setTrendDataMap({})
       return
     }
 
     setIsTrendLoading(true)
     try {
-      const data = await getTrendData(commodity, selectedField, 999)
-      setTrendData(data)
-
-      // Load price/volume if enabled
-      if (showPriceVolume && data.length > 0) {
-        const dates = data.map((d) => d.reportDate).sort()
-        const start = dates[0]
-        const end = dates[dates.length - 1]
-        const symbol = getCommoditySymbol(commodity)
-        
-        // Limit date range to avoid rate limiting (max 2 years)
-        const startDate = new Date(start)
-        const twoYearsAgo = new Date()
-        twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
-        
-        // Use more recent date if range is too large
-        const finalStart = startDate < twoYearsAgo ? twoYearsAgo.toISOString().split('T')[0] : start
-        
+      // Fetch data for all selected fields in parallel
+      const dataPromises = selectedFields.map(async (field) => {
         try {
-          const priceData = await getHistoricalPriceData(symbol, finalStart, end, '1d')
-          setPriceVolumeData(priceData)
-          if (priceData.length === 0) {
-            console.warn('No price/volume data received. This might be due to rate limiting.')
+          const data = await getTrendData(commodity, field, 999)
+          return { field, data }
+        } catch (err: any) {
+          console.error(`Failed to load trend data for field ${field}:`, err)
+          return { field, data: [] }
+        }
+      })
+
+      const results = await Promise.all(dataPromises)
+      const newTrendDataMap: Record<string, TrendDataPoint[]> = {}
+      
+      results.forEach(({ field, data }) => {
+        newTrendDataMap[field] = data
+      })
+
+      setTrendDataMap(newTrendDataMap)
+
+      // Load price/volume if enabled - use the earliest date from all fields
+      if (showPriceVolume && results.length > 0) {
+        const allDates = results
+          .flatMap(({ data }) => data.map((d) => d.reportDate))
+          .sort()
+        
+        if (allDates.length > 0) {
+          const start = allDates[0]
+          const end = allDates[allDates.length - 1]
+          const symbol = getCommoditySymbol(commodity)
+          
+          // Limit date range to avoid rate limiting (max 2 years)
+          const startDate = new Date(start)
+          const twoYearsAgo = new Date()
+          twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+          
+          // Use more recent date if range is too large
+          const finalStart = startDate < twoYearsAgo ? twoYearsAgo.toISOString().split('T')[0] : start
+          
+          try {
+            const priceData = await getHistoricalPriceData(symbol, finalStart, end, '1d')
+            setPriceVolumeData(priceData)
+            if (priceData.length === 0) {
+              console.warn('No price/volume data received. This might be due to rate limiting.')
+            }
+          } catch (error) {
+            console.error('Failed to load price/volume data:', error)
+            setPriceVolumeData([])
           }
-        } catch (error) {
-          console.error('Failed to load price/volume data:', error)
-          setPriceVolumeData([])
         }
       }
     } catch (err: any) {
@@ -201,44 +225,68 @@ export default function ViewDataSection() {
     } finally {
       setIsTrendLoading(false)
     }
-  }
+  }, [commodity, selectedFields, showPriceVolume])
 
   useEffect(() => {
-    if (selectedField) {
+    if (selectedFields.length > 0) {
       loadTrendData()
+    } else {
+      setTrendDataMap({})
     }
-  }, [commodity, selectedField])
+  }, [commodity, selectedFields, loadTrendData])
 
   useEffect(() => {
-    if (showPriceVolume && trendData.length > 0) {
-      // Get first date from trend data (earliest date)
-      const dates = trendData.map((d) => d.reportDate).sort()
-      const start = dates[0] // First date of field series
+    if (showPriceVolume && Object.keys(trendDataMap).length > 0) {
+      // Get first date from all trend data (earliest date across all fields)
+      const allDates = Object.values(trendDataMap)
+        .flatMap((data) => data.map((d) => d.reportDate))
+        .sort()
       
-      // End date is current date (today)
-      const today = new Date().toISOString().split('T')[0]
-      
-      const symbol = getCommoditySymbol(commodity)
-      
-      getHistoricalPriceData(symbol, start, today, '1d')
-        .then((data) => {
-          setPriceVolumeData(data)
-          if (data.length === 0) {
-            console.warn('No price/volume data received. This might be due to rate limiting or date range issues.')
-          }
-        })
-        .catch((error) => {
-          console.error('Failed to load price/volume data:', error)
-          setPriceVolumeData([])
-        })
+      if (allDates.length > 0) {
+        const start = allDates[0] // First date of field series
+        // End date is current date (today)
+        const today = new Date().toISOString().split('T')[0]
+        
+        const symbol = getCommoditySymbol(commodity)
+        
+        getHistoricalPriceData(symbol, start, today, '1d')
+          .then((data) => {
+            setPriceVolumeData(data)
+            if (data.length === 0) {
+              console.warn('No price/volume data received. This might be due to rate limiting or date range issues.')
+            }
+          })
+          .catch((error) => {
+            console.error('Failed to load price/volume data:', error)
+            setPriceVolumeData([])
+          })
+      }
     } else {
       setPriceVolumeData([])
     }
-  }, [showPriceVolume, trendData, commodity])
+  }, [showPriceVolume, trendDataMap, commodity])
 
-  const selectedCategory = FIELD_CATEGORIES.find((cat) =>
-    cat.fields.includes(selectedField)
-  )
+  const handleFieldToggle = (field: string) => {
+    setSelectedFields((prev) => {
+      if (prev.includes(field)) {
+        return prev.filter((f) => f !== field)
+      } else {
+        return [...prev, field]
+      }
+    })
+  }
+
+  const toggleCategory = (categoryName: string) => {
+    setExpandedCategories((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(categoryName)) {
+        newSet.delete(categoryName)
+      } else {
+        newSet.add(categoryName)
+      }
+      return newSet
+    })
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
@@ -691,36 +739,68 @@ export default function ViewDataSection() {
       <div className="bg-gray-50 p-4 rounded-md space-y-4">
         <h3 className="font-semibold">Trend</h3>
 
-        {/* Field Info Card */}
-        {selectedCategory && (
-          <div className="bg-white p-3 rounded-md border border-gray-200">
-            <p className="font-semibold text-gold-primary">{selectedCategory.name}</p>
-            <p className="text-sm mt-1">
-              <strong>Meaning:</strong> {selectedCategory.meaning}
-            </p>
-            <p className="text-sm mt-1 text-gray-600 italic">
-              <strong>Why it matters:</strong> {selectedCategory.whyItMatters}
-            </p>
-          </div>
-        )}
-
-        {/* Field Selector */}
+        {/* Field Selector - Multi-select with checkboxes */}
         <div>
-          <label className="block text-sm font-medium mb-2">
-            Select Field for Chart
-          </label>
-          <select
-            value={selectedField}
-            onChange={(e) => setSelectedField(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md"
+          <div
+            onClick={() => setIsFieldSelectorExpanded(!isFieldSelectorExpanded)}
+            className="flex items-center justify-between cursor-pointer hover:bg-gray-100 p-2 rounded -mx-2 px-2 mb-2"
           >
-            <option value="">Select a field...</option>
-            {ALL_FIELDS.map((field) => (
-              <option key={field} value={field}>
-                {field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-              </option>
-            ))}
-          </select>
+            <label className="block text-sm font-medium cursor-pointer">
+              Select Fields for Chart (Multiple Selection)
+            </label>
+            <span className="text-gray-400 text-sm">
+              {isFieldSelectorExpanded ? '▼' : '▶'}
+            </span>
+          </div>
+          {isFieldSelectorExpanded && (
+            <>
+              <div className="bg-white border border-gray-300 rounded-md p-3 max-h-64 overflow-y-auto">
+                {FIELD_CATEGORIES.map((category) => {
+                  const isExpanded = expandedCategories.has(category.name)
+                  return (
+                    <div key={category.name} className="mb-4 last:mb-0">
+                      <div
+                        onClick={() => toggleCategory(category.name)}
+                        className="font-semibold text-sm text-gray-700 mb-2 pb-1 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50 -mx-1 px-1 rounded"
+                      >
+                        <span>{category.name}</span>
+                        <span className="text-gray-400 text-xs">
+                          {isExpanded ? '▼' : '▶'}
+                        </span>
+                      </div>
+                      {isExpanded && (
+                        <div className="space-y-1">
+                          {category.fields.map((field) => {
+                            const isSelected = selectedFields.includes(field)
+                            const fieldDisplayName = field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+                            return (
+                              <label
+                                key={field}
+                                className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => handleFieldToggle(field)}
+                                  className="mr-2"
+                                />
+                                <span className="text-sm">{fieldDisplayName}</span>
+                              </label>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+              {selectedFields.length > 0 && (
+                <div className="mt-2 text-sm text-gray-600">
+                  {selectedFields.length} field{selectedFields.length !== 1 ? 's' : ''} selected
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Price/Volume Checkbox */}
@@ -738,22 +818,21 @@ export default function ViewDataSection() {
         </div>
 
         {/* Trend Chart */}
-        {selectedField && (
+        {selectedFields.length > 0 && (
           <div>
             {isTrendLoading ? (
               <div className="h-96 flex items-center justify-center bg-white rounded-md">
                 <p>Loading chart data...</p>
               </div>
-            ) : trendData.length > 0 ? (
+            ) : Object.keys(trendDataMap).length > 0 ? (
               <TrendChart
-                trendData={trendData}
-                fieldName={selectedField}
+                trendDataMap={trendDataMap}
                 commodityName={commodity}
                 priceVolumeData={showPriceVolume ? priceVolumeData : []}
               />
             ) : (
               <div className="h-96 flex items-center justify-center bg-red-50 rounded-md text-red-800">
-                No data available for selected field
+                No data available for selected fields
               </div>
             )}
           </div>

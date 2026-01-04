@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { login, type LoginCredentials } from '@/lib/auth'
 
 interface LoginModalProps {
@@ -13,8 +14,13 @@ export default function LoginModal({ isOpen, onSuccess }: LoginModalProps) {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
 
-  if (!isOpen) return null
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!isOpen || !mounted) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,9 +40,9 @@ export default function LoginModal({ isOpen, onSuccess }: LoginModalProps) {
     }
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+  const modalContent = (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ zIndex: 9999 }}>
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 z-[10000]" style={{ zIndex: 10000 }}>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Login</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -91,5 +97,11 @@ export default function LoginModal({ isOpen, onSuccess }: LoginModalProps) {
       </div>
     </div>
   )
+
+  if (typeof window === 'undefined' || !document.body) {
+    return null
+  }
+
+  return createPortal(modalContent, document.body)
 }
 

@@ -11,15 +11,13 @@ if (typeof Highcharts === 'object') {
 }
 
 interface TrendChartProps {
-  trendData: TrendDataPoint[]
-  fieldName: string
+  trendDataMap: Record<string, TrendDataPoint[]>
   commodityName: string
   priceVolumeData: HistoricalPricePoint[]
 }
 
 export default function TrendChart({
-  trendData,
-  fieldName,
+  trendDataMap,
   commodityName,
   priceVolumeData,
 }: TrendChartProps) {
@@ -33,17 +31,45 @@ export default function TrendChart({
     }
   }, [priceVolumeData])
 
-  // Memoize series data
-  const { fieldData, priceData, volumeData, hasPriceVolume, hasVolume } = useMemo(() => {
-    console.log('Trend data points:', trendData.length)
-    if (trendData.length > 0) {
-      console.log('First trend data point date:', trendData[0].reportDate)
-    }
+  // Generate colors for multiple series
+  const getColorForIndex = (index: number): string => {
+    const colors = [
+      '#D4AF37', // Gold
+      '#2196F3', // Blue
+      '#4CAF50', // Green
+      '#FF9800', // Orange
+      '#9C27B0', // Purple
+      '#F44336', // Red
+      '#00BCD4', // Cyan
+      '#FFC107', // Amber
+      '#795548', // Brown
+      '#607D8B', // Blue Grey
+    ]
+    return colors[index % colors.length]
+  }
 
-    // Prepare field data (weekly) - only trend data points
-    const fData = trendData.map((point) => {
-      const date = new Date(point.reportDate).getTime()
-      return [date, point.value]
+  // Memoize series data
+  const { fieldSeries, priceData, volumeData, hasPriceVolume, hasVolume } = useMemo(() => {
+    const fields = Object.keys(trendDataMap)
+    console.log('Trend data fields:', fields.length)
+    
+    // Prepare field data for each selected field
+    const series = fields.map((fieldName, index) => {
+      const trendData = trendDataMap[fieldName]
+      const fieldData = trendData.map((point) => {
+        const date = new Date(point.reportDate).getTime()
+        return [date, point.value]
+      })
+      
+      const fieldDisplayName = fieldName
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (l) => l.toUpperCase())
+      
+      return {
+        name: fieldDisplayName,
+        data: fieldData,
+        color: getColorForIndex(index),
+      }
     })
 
     // Prepare price data (daily) - all price/volume data points, not filtered to trend dates
@@ -72,21 +98,17 @@ export default function TrendChart({
       })
       .filter((item): item is [number, number] => item !== null)
 
-    console.log('Field data points (weekly):', fData.length)
+    console.log('Field series:', series.length)
     console.log('Price data points (daily):', pData.length, 'Volume data points (daily):', vData.length)
 
     return {
-      fieldData: fData,
+      fieldSeries: series,
       priceData: pData,
       volumeData: vData,
       hasPriceVolume: pData.length > 0,
       hasVolume: vData.length > 0,
     }
-  }, [trendData, priceVolumeData])
-
-  const fieldDisplayName = fieldName
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (l) => l.toUpperCase())
+  }, [trendDataMap, priceVolumeData])
 
   const options: Highcharts.Options = {
     chart: {
@@ -94,7 +116,7 @@ export default function TrendChart({
       height: hasVolume ? 500 : 400,
     },
     title: {
-      text: `${fieldDisplayName} - ${commodityName}${
+      text: `${commodityName} - Multiple Fields${
         hasPriceVolume ? ' (with Price/Volume)' : ''
       }`,
       style: {
@@ -121,7 +143,7 @@ export default function TrendChart({
     },
     yAxis: [
       {
-        title: { text: fieldDisplayName },
+        title: { text: 'Field Values' },
         labels: {
           formatter: function () {
             return this.value.toLocaleString()
@@ -209,19 +231,21 @@ export default function TrendChart({
       },
     },
     series: [
-      {
-        name: fieldDisplayName,
-        type: 'line',
-        data: fieldData,
+      // Add all field series
+      ...fieldSeries.map((field) => ({
+        name: field.name,
+        type: 'line' as const,
+        data: field.data,
         yAxis: 0,
-        color: '#D4AF37',
+        color: field.color,
         lineWidth: 2,
-      },
+      })),
+      // Add price series if enabled
       ...(hasPriceVolume
         ? [
             {
               name: 'Price',
-              type: 'line',
+              type: 'line' as const,
               data: priceData,
               yAxis: 1,
               color: '#2196F3',
@@ -229,11 +253,12 @@ export default function TrendChart({
             } as Highcharts.SeriesOptionsType,
           ]
         : []),
+      // Add volume series if enabled
       ...(hasVolume
         ? [
             {
               name: 'Volume',
-              type: 'column',
+              type: 'column' as const,
               data: volumeData,
               yAxis: hasPriceVolume ? 2 : 1,
               color: '#9E9E9E',
@@ -248,42 +273,49 @@ export default function TrendChart({
     if (chartRef.current?.chart) {
       const chart = chartRef.current.chart
       
-      // Update series
-      if (chart.series.length > 0) {
-        chart.series[0].setData(fieldData, false)
-        
-        if (hasPriceVolume && chart.series.length > 1) {
-          chart.series[1].setData(priceData, false)
-        } else if (hasPriceVolume && chart.series.length === 1) {
-          chart.addSeries({
-            name: 'Price',
-            type: 'line',
-            data: priceData,
-            yAxis: 1,
-            color: '#2196F3',
-            lineWidth: 2,
-          } as Highcharts.SeriesOptionsType, false)
-        }
-        
-        if (hasVolume) {
-          const volumeSeriesIndex = hasPriceVolume ? 2 : 1
-          if (chart.series.length > volumeSeriesIndex) {
-            chart.series[volumeSeriesIndex].setData(volumeData, false)
-          } else {
-            chart.addSeries({
-              name: 'Volume',
-              type: 'column',
-              data: volumeData,
-              yAxis: hasPriceVolume ? 2 : 1,
-              color: '#9E9E9E',
-            } as Highcharts.SeriesOptionsType, false)
-          }
-        }
-        
-        chart.redraw()
+      // Remove all existing series
+      while (chart.series.length > 0) {
+        chart.series[0].remove(false)
       }
+      
+      // Add all field series
+      fieldSeries.forEach((field) => {
+        chart.addSeries({
+          name: field.name,
+          type: 'line',
+          data: field.data,
+          yAxis: 0,
+          color: field.color,
+          lineWidth: 2,
+        } as Highcharts.SeriesOptionsType, false)
+      })
+      
+      // Add price series if enabled
+      if (hasPriceVolume) {
+        chart.addSeries({
+          name: 'Price',
+          type: 'line',
+          data: priceData,
+          yAxis: 1,
+          color: '#2196F3',
+          lineWidth: 2,
+        } as Highcharts.SeriesOptionsType, false)
+      }
+      
+      // Add volume series if enabled
+      if (hasVolume) {
+        chart.addSeries({
+          name: 'Volume',
+          type: 'column',
+          data: volumeData,
+          yAxis: hasPriceVolume ? 2 : 1,
+          color: '#9E9E9E',
+        } as Highcharts.SeriesOptionsType, false)
+      }
+      
+      chart.redraw()
     }
-  }, [fieldData, priceData, volumeData, hasPriceVolume, hasVolume])
+  }, [fieldSeries, priceData, volumeData, hasPriceVolume, hasVolume])
 
   return (
     <div className="bg-white p-4 rounded-md">
