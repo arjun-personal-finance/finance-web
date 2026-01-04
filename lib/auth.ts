@@ -12,14 +12,21 @@ export interface LoginCredentials {
 export interface LoginResponse {
   token?: string
   access_token?: string
+  token_type?: string
   message?: string
   role?: string
   user_role?: string
   userRole?: string
   user?: {
+    id?: number
+    username?: string
+    email?: string
     role?: string
     user_role?: string
     userRole?: string
+    is_active?: boolean
+    created_at?: string
+    updated_at?: string
   }
 }
 
