@@ -111,6 +111,7 @@ export default function ViewDataSection() {
 
   // Trend chart state
   const [selectedFields, setSelectedFields] = useState<string[]>([])
+  const [tempSelectedFields, setTempSelectedFields] = useState<string[]>([])
   const [trendDataMap, setTrendDataMap] = useState<Record<string, TrendDataPoint[]>>({})
   const [isTrendLoading, setIsTrendLoading] = useState(false)
   const [showPriceVolume, setShowPriceVolume] = useState(false)
@@ -162,8 +163,9 @@ export default function ViewDataSection() {
     }
   }
 
-  const loadTrendData = useCallback(async () => {
-    if (selectedFields.length === 0) {
+  const loadTrendData = useCallback(async (fieldsToUse?: string[]) => {
+    const fields = fieldsToUse || selectedFields
+    if (fields.length === 0) {
       setTrendDataMap({})
       return
     }
@@ -171,7 +173,7 @@ export default function ViewDataSection() {
     setIsTrendLoading(true)
     try {
       // Fetch data for all selected fields in parallel
-      const dataPromises = selectedFields.map(async (field) => {
+      const dataPromises = fields.map(async (field) => {
         try {
           const data = await getTrendData(commodity, field, 999)
           return { field, data }
@@ -183,7 +185,7 @@ export default function ViewDataSection() {
 
       const results = await Promise.all(dataPromises)
       const newTrendDataMap: Record<string, TrendDataPoint[]> = {}
-      
+
       results.forEach(({ field, data }) => {
         newTrendDataMap[field] = data
       })
@@ -195,20 +197,20 @@ export default function ViewDataSection() {
         const allDates = results
           .flatMap(({ data }) => data.map((d) => d.reportDate))
           .sort()
-        
+
         if (allDates.length > 0) {
           const start = allDates[0]
           const end = allDates[allDates.length - 1]
           const symbol = getCommoditySymbol(commodity)
-          
+
           // Limit date range to avoid rate limiting (max 2 years)
           const startDate = new Date(start)
           const twoYearsAgo = new Date()
           twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
-          
+
           // Use more recent date if range is too large
           const finalStart = startDate < twoYearsAgo ? twoYearsAgo.toISOString().split('T')[0] : start
-          
+
           try {
             const priceData = await getHistoricalPriceData(symbol, finalStart, end, '1d')
             setPriceVolumeData(priceData)
@@ -228,28 +230,7 @@ export default function ViewDataSection() {
     }
   }, [commodity, selectedFields, showPriceVolume])
 
-  useEffect(() => {
-    // Clear any existing debounce timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current)
-    }
 
-    if (selectedFields.length > 0) {
-      // Debounce the loadTrendData call by 200ms
-      debounceTimerRef.current = setTimeout(() => {
-        loadTrendData()
-      }, 200)
-    } else {
-      setTrendDataMap({})
-    }
-
-    // Cleanup function to clear timer on unmount or dependency change
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-      }
-    }
-  }, [commodity, selectedFields, loadTrendData])
 
   useEffect(() => {
     if (showPriceVolume && Object.keys(trendDataMap).length > 0) {
@@ -283,13 +264,25 @@ export default function ViewDataSection() {
   }, [showPriceVolume, trendDataMap, commodity])
 
   const handleFieldToggle = (field: string) => {
-    setSelectedFields((prev) => {
+    setTempSelectedFields((prev) => {
       if (prev.includes(field)) {
         return prev.filter((f) => f !== field)
       } else {
         return [...prev, field]
       }
     })
+  }
+
+  const applySelectedFields = async () => {
+    setSelectedFields(tempSelectedFields)
+    await loadTrendData(tempSelectedFields)
+  }
+
+  const resetSelection = () => {
+    setTempSelectedFields([])
+    setSelectedFields([])
+    setTrendDataMap({})
+    setPriceVolumeData([])
   }
 
   const toggleCategory = (categoryName: string) => {
@@ -303,6 +296,10 @@ export default function ViewDataSection() {
       return newSet
     })
   }
+
+  const arraysEqual = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i])
+
+  const shouldApply = selectedFields.length === 0 || !arraysEqual(tempSelectedFields, selectedFields)
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
@@ -787,7 +784,7 @@ export default function ViewDataSection() {
                       {isExpanded && (
                         <div className="space-y-1">
                           {category.fields.map((field) => {
-                            const isSelected = selectedFields.includes(field)
+                            const isSelected = tempSelectedFields.includes(field)
                             const fieldDisplayName = field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
                             return (
                               <label
@@ -810,14 +807,25 @@ export default function ViewDataSection() {
                   )
                 })}
               </div>
-              {selectedFields.length > 0 && (
+              {tempSelectedFields.length > 0 && (
                 <div className="mt-2 text-sm text-gray-600">
-                  {selectedFields.length} field{selectedFields.length !== 1 ? 's' : ''} selected
+                  {tempSelectedFields.length} field{tempSelectedFields.length !== 1 ? 's' : ''} selected
                 </div>
               )}
             </>
           )}
         </div>
+
+        {/* Apply/Reset Button */}
+        {tempSelectedFields.length > 0 && (
+          <button
+            onClick={shouldApply ? applySelectedFields : resetSelection}
+            disabled={isTrendLoading}
+            className="w-full bg-gold-primary text-white py-2 px-4 rounded-md font-semibold hover:bg-gold-dark disabled:opacity-50"
+          >
+            {shouldApply ? (isTrendLoading ? 'Applying...' : 'Apply Selection') : 'Reset & Clear Chart'}
+          </button>
+        )}
 
         {/* Price/Volume Checkbox */}
         <div className="flex items-center">
@@ -857,4 +865,3 @@ export default function ViewDataSection() {
     </div>
   )
 }
-
