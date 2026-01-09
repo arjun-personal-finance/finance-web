@@ -391,6 +391,15 @@ export default function ViewDataSection() {
                   <span className="text-gray-600">Open Interest:</span>
                   <span className="font-medium">
                     {latestData.open_interest_all.toLocaleString()}
+                    {latestData.change_in_open_interest_all !== undefined && (
+                      <span className={`ml-1 ${
+                        (latestData.change_in_open_interest_all || 0) >= 0
+                          ? 'text-green-700'
+                          : 'text-red-700'
+                      }`}>
+                        ({(latestData.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{latestData.change_in_open_interest_all.toLocaleString()})
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
@@ -399,6 +408,15 @@ export default function ViewDataSection() {
                   <span className="text-gray-600">Prod/Merc Long:</span>
                   <span className="font-medium">
                     {latestData.prod_merc_positions_long.toLocaleString()}
+                    {latestData.change_in_prod_merc_long !== undefined && (
+                      <span className={`ml-1 ${
+                        (latestData.change_in_prod_merc_long || 0) >= 0
+                          ? 'text-green-700'
+                          : 'text-red-700'
+                      }`}>
+                        ({(latestData.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{latestData.change_in_prod_merc_long.toLocaleString()})
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
@@ -407,6 +425,15 @@ export default function ViewDataSection() {
                   <span className="text-gray-600">Prod/Merc Short:</span>
                   <span className="font-medium">
                     {latestData.prod_merc_positions_short.toLocaleString()}
+                    {latestData.change_in_prod_merc_short !== undefined && (
+                      <span className={`ml-1 ${
+                        (latestData.change_in_prod_merc_short || 0) >= 0
+                          ? 'text-green-700'
+                          : 'text-red-700'
+                      }`}>
+                        ({(latestData.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{latestData.change_in_prod_merc_short.toLocaleString()})
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
@@ -415,6 +442,15 @@ export default function ViewDataSection() {
                   <span className="text-gray-600">Swap Long:</span>
                   <span className="font-medium">
                     {latestData.swap_positions_long_all.toLocaleString()}
+                    {latestData.change_in_swap_long_all !== undefined && (
+                      <span className={`ml-1 ${
+                        (latestData.change_in_swap_long_all || 0) >= 0
+                          ? 'text-green-700'
+                          : 'text-red-700'
+                      }`}>
+                        ({(latestData.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_swap_long_all.toLocaleString()})
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
@@ -423,6 +459,15 @@ export default function ViewDataSection() {
                   <span className="text-gray-600">Swap Short:</span>
                   <span className="font-medium">
                     {latestData.swap__positions_short_all.toLocaleString()}
+                    {latestData.change_in_swap_short_all !== undefined && (
+                      <span className={`ml-1 ${
+                        (latestData.change_in_swap_short_all || 0) >= 0
+                          ? 'text-green-700'
+                          : 'text-red-700'
+                      }`}>
+                        ({(latestData.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_swap_short_all.toLocaleString()})
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
@@ -431,6 +476,15 @@ export default function ViewDataSection() {
                   <span className="text-gray-600">M Money Long:</span>
                   <span className="font-medium">
                     {latestData.m_money_positions_long_all.toLocaleString()}
+                    {latestData.change_in_m_money_long_all !== undefined && (
+                      <span className={`ml-1 ${
+                        (latestData.change_in_m_money_long_all || 0) >= 0
+                          ? 'text-green-700'
+                          : 'text-red-700'
+                      }`}>
+                        ({(latestData.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_m_money_long_all.toLocaleString()})
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
@@ -439,70 +493,19 @@ export default function ViewDataSection() {
                   <span className="text-gray-600">M Money Short:</span>
                   <span className="font-medium">
                     {latestData.m_money_positions_short_all.toLocaleString()}
+                    {latestData.change_in_m_money_short_all !== undefined && (
+                      <span className={`ml-1 ${
+                        (latestData.change_in_m_money_short_all || 0) >= 0
+                          ? 'text-green-700'
+                          : 'text-red-700'
+                      }`}>
+                        ({(latestData.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_m_money_short_all.toLocaleString()})
+                      </span>
+                    )}
                   </span>
                 </div>
               )}
             </div>
-
-            {/* Changes Section */}
-            {latestData.change_in_open_interest_all !== undefined && (
-              <>
-                <div className="border-t border-green-200 pt-3 mt-3">
-                  <div className="text-sm font-semibold mb-2">Changes</div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">OI Change:</span>
-                      <span
-                        className={`font-medium ${
-                          (latestData.change_in_open_interest_all || 0) >= 0
-                            ? 'text-green-700'
-                            : 'text-red-700'
-                        }`}
-                      >
-                        {(latestData.change_in_open_interest_all || 0) >= 0
-                          ? '+'
-                          : ''}
-                        {latestData.change_in_open_interest_all.toLocaleString()}
-                      </span>
-                    </div>
-                    {latestData.change_in_prod_merc_long !== undefined && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Prod/Merc Long Δ:</span>
-                        <span
-                          className={`font-medium ${
-                            (latestData.change_in_prod_merc_long || 0) >= 0
-                              ? 'text-green-700'
-                              : 'text-red-700'
-                          }`}
-                        >
-                          {(latestData.change_in_prod_merc_long || 0) >= 0
-                            ? '+'
-                            : ''}
-                          {latestData.change_in_prod_merc_long.toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    {latestData.change_in_m_money_long_all !== undefined && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">M Money Long Δ:</span>
-                        <span
-                          className={`font-medium ${
-                            (latestData.change_in_m_money_long_all || 0) >= 0
-                              ? 'text-green-700'
-                              : 'text-red-700'
-                          }`}
-                        >
-                          {(latestData.change_in_m_money_long_all || 0) >= 0
-                            ? '+'
-                            : ''}
-                          {latestData.change_in_m_money_long_all.toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </div>
       ) : (
@@ -555,6 +558,15 @@ export default function ViewDataSection() {
                             <span className="text-gray-600">Open Interest:</span>
                             <span className="font-medium">
                               {data.open_interest_all.toLocaleString()}
+                              {data.change_in_open_interest_all !== undefined && (
+                                <span className={`ml-1 ${
+                                  (data.change_in_open_interest_all || 0) >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                }`}>
+                                  ({(data.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{data.change_in_open_interest_all.toLocaleString()})
+                                </span>
+                              )}
                             </span>
                           </div>
                         )}
@@ -563,6 +575,15 @@ export default function ViewDataSection() {
                             <span className="text-gray-600">Prod/Merc Long:</span>
                             <span className="font-medium">
                               {data.prod_merc_positions_long.toLocaleString()}
+                              {data.change_in_prod_merc_long !== undefined && (
+                                <span className={`ml-1 ${
+                                  (data.change_in_prod_merc_long || 0) >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                }`}>
+                                  ({(data.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{data.change_in_prod_merc_long.toLocaleString()})
+                                </span>
+                              )}
                             </span>
                           </div>
                         )}
@@ -571,6 +592,15 @@ export default function ViewDataSection() {
                             <span className="text-gray-600">Prod/Merc Short:</span>
                             <span className="font-medium">
                               {data.prod_merc_positions_short.toLocaleString()}
+                              {data.change_in_prod_merc_short !== undefined && (
+                                <span className={`ml-1 ${
+                                  (data.change_in_prod_merc_short || 0) >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                }`}>
+                                  ({(data.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{data.change_in_prod_merc_short.toLocaleString()})
+                                </span>
+                              )}
                             </span>
                           </div>
                         )}
@@ -579,6 +609,15 @@ export default function ViewDataSection() {
                             <span className="text-gray-600">Swap Long:</span>
                             <span className="font-medium">
                               {data.swap_positions_long_all.toLocaleString()}
+                              {data.change_in_swap_long_all !== undefined && (
+                                <span className={`ml-1 ${
+                                  (data.change_in_swap_long_all || 0) >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                }`}>
+                                  ({(data.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{data.change_in_swap_long_all.toLocaleString()})
+                                </span>
+                              )}
                             </span>
                           </div>
                         )}
@@ -587,6 +626,15 @@ export default function ViewDataSection() {
                             <span className="text-gray-600">Swap Short:</span>
                             <span className="font-medium">
                               {data.swap__positions_short_all.toLocaleString()}
+                              {data.change_in_swap_short_all !== undefined && (
+                                <span className={`ml-1 ${
+                                  (data.change_in_swap_short_all || 0) >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                }`}>
+                                  ({(data.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{data.change_in_swap_short_all.toLocaleString()})
+                                </span>
+                              )}
                             </span>
                           </div>
                         )}
@@ -595,6 +643,15 @@ export default function ViewDataSection() {
                             <span className="text-gray-600">M Money Long:</span>
                             <span className="font-medium">
                               {data.m_money_positions_long_all.toLocaleString()}
+                              {data.change_in_m_money_long_all !== undefined && (
+                                <span className={`ml-1 ${
+                                  (data.change_in_m_money_long_all || 0) >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                }`}>
+                                  ({(data.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{data.change_in_m_money_long_all.toLocaleString()})
+                                </span>
+                              )}
                             </span>
                           </div>
                         )}
@@ -603,138 +660,19 @@ export default function ViewDataSection() {
                             <span className="text-gray-600">M Money Short:</span>
                             <span className="font-medium">
                               {data.m_money_positions_short_all.toLocaleString()}
+                              {data.change_in_m_money_short_all !== undefined && (
+                                <span className={`ml-1 ${
+                                  (data.change_in_m_money_short_all || 0) >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                }`}>
+                                  ({(data.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{data.change_in_m_money_short_all.toLocaleString()})
+                                </span>
+                              )}
                             </span>
                           </div>
                         )}
                       </div>
-
-                      {/* Changes Section */}
-                      {data.change_in_open_interest_all !== undefined && (
-                        <>
-                          <div className="text-xs font-semibold text-gray-700 mt-3 mb-2">
-                            Changes
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">OI Change:</span>
-                              <span
-                                className={`font-medium ${
-                                  (data.change_in_open_interest_all || 0) >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                }`}
-                              >
-                                {(data.change_in_open_interest_all || 0) >= 0
-                                  ? '+'
-                                  : ''}
-                                {data.change_in_open_interest_all.toLocaleString()}
-                              </span>
-                            </div>
-                            {data.change_in_prod_merc_long !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Prod/Merc Long Δ:</span>
-                                <span
-                                  className={`font-medium ${
-                                    (data.change_in_prod_merc_long || 0) >= 0
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}
-                                >
-                                  {(data.change_in_prod_merc_long || 0) >= 0
-                                    ? '+'
-                                    : ''}
-                                  {data.change_in_prod_merc_long.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {data.change_in_prod_merc_short !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Prod/Merc Short Δ:</span>
-                                <span
-                                  className={`font-medium ${
-                                    (data.change_in_prod_merc_short || 0) >= 0
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}
-                                >
-                                  {(data.change_in_prod_merc_short || 0) >= 0
-                                    ? '+'
-                                    : ''}
-                                  {data.change_in_prod_merc_short.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {data.change_in_m_money_long_all !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">M Money Long Δ:</span>
-                                <span
-                                  className={`font-medium ${
-                                    (data.change_in_m_money_long_all || 0) >= 0
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}
-                                >
-                                  {(data.change_in_m_money_long_all || 0) >= 0
-                                    ? '+'
-                                    : ''}
-                                  {data.change_in_m_money_long_all.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {data.change_in_m_money_short_all !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">M Money Short Δ:</span>
-                                <span
-                                  className={`font-medium ${
-                                    (data.change_in_m_money_short_all || 0) >= 0
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}
-                                >
-                                  {(data.change_in_m_money_short_all || 0) >= 0
-                                    ? '+'
-                                    : ''}
-                                  {data.change_in_m_money_short_all.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {data.change_in_swap_long_all !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Swap Long Δ:</span>
-                                <span
-                                  className={`font-medium ${
-                                    (data.change_in_swap_long_all || 0) >= 0
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}
-                                >
-                                  {(data.change_in_swap_long_all || 0) >= 0
-                                    ? '+'
-                                    : ''}
-                                  {data.change_in_swap_long_all.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            {data.change_in_swap_short_all !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Swap Short Δ:</span>
-                                <span
-                                  className={`font-medium ${
-                                    (data.change_in_swap_short_all || 0) >= 0
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}
-                                >
-                                  {(data.change_in_swap_short_all || 0) >= 0
-                                    ? '+'
-                                    : ''}
-                                  {data.change_in_swap_short_all.toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      )}
                     </div>
                   )}
                 </div>
