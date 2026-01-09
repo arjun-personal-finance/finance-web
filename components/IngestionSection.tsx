@@ -33,17 +33,20 @@ export default function IngestionSection() {
         endDate || undefined
       )
 
-      setInsertedCount(result.insertedCount)
-      setDuplicateCount(result.duplicateCount)
+      setInsertedCount(result.inserted_count)
+      setDuplicateCount(result.duplicate_count)
 
-      if (result.duplicateCount > 0) {
+      // Use the message from the response if available, otherwise construct one
+      if (result.message) {
+        setStatus(result.message)
+      } else if (result.duplicate_count > 0) {
         setStatus(
-          `Ingested ${result.insertedCount} new records. Skipped ${result.duplicateCount} duplicates.`
+          `Ingested ${result.inserted_count} new records. Skipped ${result.duplicate_count} duplicates.`
         )
-      } else if (result.insertedCount === 0) {
+      } else if (result.inserted_count === 0) {
         setStatus('No new data found for the selected date range.')
       } else {
-        setStatus(`Successfully ingested ${result.insertedCount} records`)
+        setStatus(`Successfully ingested ${result.inserted_count} records`)
       }
     } catch (err: any) {
       setError(`Failed to ingest data: ${err.message}`)

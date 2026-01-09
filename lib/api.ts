@@ -54,8 +54,15 @@ export interface HistoricalPricePoint {
 }
 
 export interface IngestResponse {
-  insertedCount: number
-  duplicateCount: number
+  commodity_name: string
+  date_range?: {
+    start: string
+    end: string
+  }
+  duplicate_count: number
+  inserted_count: number
+  message: string
+  total_fetched: number
 }
 
 // Commodity symbols
@@ -105,19 +112,29 @@ export async function ingestCotData(
 
   const data = await response.json()
   
-  // Handle different response formats
-  if (data.insertedCount !== undefined) {
+  // Handle snake_case response format
+  if (data.inserted_count !== undefined) {
     return {
-      insertedCount: data.insertedCount,
-      duplicateCount: data.duplicateCount || 0,
+      commodity_name: data.commodity_name || commodityName,
+      date_range: data.date_range,
+      duplicate_count: data.duplicate_count ?? 0,
+      inserted_count: data.inserted_count ?? 0,
+      message: data.message || `Successfully ingested ${data.inserted_count ?? 0} new records, skipped ${data.duplicate_count ?? 0} duplicates`,
+      total_fetched: data.total_fetched ?? 0,
     }
-  } else if (data.data) {
+  } else if (data.data && data.data.inserted_count !== undefined) {
+    // Handle nested data format
+    const nested = data.data
     return {
-      insertedCount: data.data.insertedCount || 0,
-      duplicateCount: data.data.duplicateCount || 0,
+      commodity_name: nested.commodity_name || data.commodity_name || commodityName,
+      date_range: nested.date_range || data.date_range,
+      duplicate_count: nested.duplicate_count ?? 0,
+      inserted_count: nested.inserted_count ?? 0,
+      message: nested.message || data.message || `Successfully ingested ${nested.inserted_count ?? 0} new records, skipped ${nested.duplicate_count ?? 0} duplicates`,
+      total_fetched: nested.total_fetched ?? 0,
     }
   } else {
-    throw new Error('Unexpected response format')
+    throw new Error('Unexpected response format: missing inserted_count field')
   }
 }
 
