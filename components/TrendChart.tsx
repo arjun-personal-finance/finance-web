@@ -25,27 +25,40 @@ export default function TrendChart({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Log price/volume data for debugging
-  useEffect(() => {
-    console.log('Price/volume data received:', priceVolumeData.length, 'points')
-    if (priceVolumeData.length > 0) {
-      console.log('First price data point:', priceVolumeData[0])
-    }
-  }, [priceVolumeData])
-
-  // Generate colors for multiple series
+  // Generate visually distinct colors spread across the color wheel
   const getColorForIndex = (index: number): string => {
+    // Colors from different regions of the color wheel - max 1-2 per color family
     const colors = [
-      '#D4AF37', // Gold
-      '#2196F3', // Blue
-      '#4CAF50', // Green
-      '#FF9800', // Orange
-      '#9C27B0', // Purple
-      '#F44336', // Red
-      '#00BCD4', // Cyan
-      '#FFC107', // Amber
-      '#795548', // Brown
-      '#607D8B', // Blue Grey
+      '#E63946', // Red
+      '#F4A261', // Sandy Orange
+      '#2A9D8F', // Teal
+      '#264653', // Dark Cyan
+      '#7209B7', // Purple
+      '#FF006E', // Pink
+      '#FB5607', // Bright Orange
+      '#06D6A0', // Mint
+      '#118AB2', // Ocean Blue
+      '#FFD166', // Yellow
+      '#3A0CA3', // Indigo
+      '#4CC9F0', // Sky Blue
+      '#FF9F1C', // Amber
+      '#F77F00', // Pumpkin
+      '#9B2226', // Maroon
+      '#4361EE', // Royal Blue
+      '#8338EC', // Violet
+      '#F72585', // Magenta
+      '#386641', // Forest Green
+      '#2E86AB', // Steel Blue
+      '#FAA307', // Apricot
+      '#C73E1D', // Rust
+      '#A23B72', // Berry
+      '#F18F01', // Tangerine
+      '#780000', // Dark Red
+      '#E9C46A', // Gold
+      '#1D3557', // Navy
+      '#457B9D', // Muted Blue
+      '#4ECDC4', // Bright Teal
+      '#E76F51', // Coral
     ]
     return colors[index % colors.length]
   }
@@ -53,7 +66,6 @@ export default function TrendChart({
   // Memoize series data
   const { fieldSeries, priceData, volumeData, hasPriceVolume, hasVolume } = useMemo(() => {
     const fields = Object.keys(trendDataMap)
-    console.log('Trend data fields:', fields.length)
     
     // Prepare field data for each selected field
     const series = fields.map((fieldName, index) => {
@@ -99,9 +111,6 @@ export default function TrendChart({
         return null
       })
       .filter((item): item is [number, number] => item !== null)
-
-    console.log('Field series:', series.length)
-    console.log('Price data points (daily):', pData.length, 'Volume data points (daily):', vData.length)
 
     return {
       fieldSeries: series,
@@ -266,6 +275,10 @@ export default function TrendChart({
         shadow: false,
         borderWidth: 0,
         dataLabels: { enabled: false },
+        // Disable data grouping for volume to show actual daily values
+        dataGrouping: {
+          enabled: false,
+        },
       },
     },
     series: [
@@ -360,6 +373,9 @@ export default function TrendChart({
           data: volumeData,
           yAxis: 2,
           color: '#9E9E9E',
+          dataGrouping: {
+            enabled: false,
+          },
         } as Highcharts.SeriesOptionsType, false)
       }
       
@@ -397,4 +413,3 @@ export default function TrendChart({
     </div>
   )
 }
-
