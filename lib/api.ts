@@ -307,6 +307,188 @@ export async function getTrendData(
   return mapped
 }
 
+// Forecast API Types
+export interface ForecastDashboard {
+  generated_at: string
+  signal_1_model_bias: {
+    direction: string
+    confidence: string
+    horizon: string
+    prob_up: number
+    prob_down: number
+    prob_flat: number
+    description: string
+    name: string
+  }
+  signal_2_regime: {
+    regime: string
+    reason: string
+    mm_trapped: string
+    mm_z: number
+    divergence_z: number
+    description: string
+    name: string
+  }
+  signal_3_mm_gauge: {
+    positioning: string
+    z_score: number
+    percentile: number
+    net_pct: number
+    interpretation: string
+    description: string
+    name: string
+  }
+  signal_4_producer_divergence: {
+    level: string
+    z_score: number
+    direction: string
+    change: string
+    divergence_change: number
+    interpretation: string
+    description: string
+    name: string
+  }
+  signal_5_price_context: {
+    price_state: string
+    trend_4w: number
+    trend_12w: number
+    vol_state: string
+    vol_z: number
+    vol_4w: number
+    vol_interpretation: string
+    description: string
+    name: string
+  }
+  signal_6_trade_readiness: {
+    score: number
+    max_score: number
+    level: string
+    action: string
+    factors: string[]
+    description: string
+    name: string
+  }
+  signal_7_suggested_action: {
+    title: string
+    bias: string
+    regime: string
+    guidance: string
+    risk_level: string
+    readiness: string
+    context: string
+    description: string
+    name: string
+  }
+  quick_summary: {
+    direction: string
+    confidence: string
+    regime: string
+    trade_readiness: string
+    action: string
+  }
+  prediction: {
+    direction: string
+    probabilities: {
+      down: number
+      up: number
+    }
+  }
+  data_info: {
+    cot_report_date: string
+    price_date: string
+    commodity: string
+  }
+}
+
+export interface ForecastSignal {
+  direction: string
+  confidence: string
+  regime: string
+  trade_readiness: string
+  action: string
+}
+
+export interface ForecastFeatures {
+  features: Record<string, number>
+  interpretations: {
+    model_probability_up: number
+    trade_signal: string
+    regime: {
+      trend: string
+      volatility: string
+      participation: string
+    }
+    managed_money: {
+      direction: string
+      crowding: string
+      momentum: string
+    }
+    producer: {
+      positioning: string
+      stress: string
+      momentum: string
+    }
+    divergence: {
+      level: string
+      direction: string
+    }
+    execution: {
+      bias: string
+      action: string
+      position_size_multiplier: number
+    }
+    narrative: string
+  }
+  model_prediction: {
+    direction: string
+    probabilities: {
+      down: number
+      up: number
+    }
+  }
+  report_date: string
+}
+
+// Forecast API Functions
+export async function getForecastDashboard(commodity: string): Promise<ForecastDashboard> {
+  const encoded = encodeURIComponent(commodity)
+  const response = await fetch(`${BASE_URL}/forecast/${encoded}/dashboard`, {
+    headers: getHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch forecast dashboard: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
+export async function getForecastSignal(commodity: string): Promise<ForecastSignal> {
+  const encoded = encodeURIComponent(commodity)
+  const response = await fetch(`${BASE_URL}/forecast/${encoded}/signal`, {
+    headers: getHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch forecast signal: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
+export async function getForecastFeatures(commodity: string): Promise<ForecastFeatures> {
+  const encoded = encodeURIComponent(commodity)
+  const response = await fetch(`${BASE_URL}/forecast/${encoded}/features`, {
+    headers: getHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch forecast features: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
 export async function getHistoricalPriceData(
   symbol: string,
   startDate?: string,

@@ -13,6 +13,7 @@ import {
   type HistoricalPricePoint,
 } from '@/lib/api'
 import TrendChart from './TrendChart'
+import ForecastSection from './ForecastSection'
 
 const COMMODITIES = ['SILVER', 'GOLD', 'COPPER', 'CRUDE OIL']
 
@@ -120,6 +121,8 @@ export default function ViewDataSection() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [isFieldSelectorExpanded, setIsFieldSelectorExpanded] = useState(false)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+
 
   const loadData = async () => {
     setIsLoading(true)
@@ -229,6 +232,8 @@ export default function ViewDataSection() {
       setIsTrendLoading(false)
     }
   }, [commodity, selectedFields, showPriceVolume])
+
+
 
 
 
@@ -685,6 +690,9 @@ export default function ViewDataSection() {
           No historical data. {startDate || endDate ? 'Try adjusting date filters.' : 'Select date filters and click "Load Data".'}
         </div>
       )}
+
+      {/* Forecast Section */}
+      <ForecastSection commodity={commodity} />
 
       {/* Trend Section */}
       <div className="bg-gray-50 p-4 rounded-md space-y-4">
