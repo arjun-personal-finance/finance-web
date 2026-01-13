@@ -225,6 +225,17 @@ export async function getLatestCotData(
   return null
 }
 
+export interface MultipleTrendDataPoint {
+  report_date: string
+  values: Record<string, number>
+}
+
+export interface MultipleTrendResponse {
+  commodity_name: string
+  field_names: string[]
+  data_points: MultipleTrendDataPoint[]
+}
+
 export async function getTrendData(
   commodityName: string,
   fieldName: string,
@@ -248,10 +259,10 @@ export async function getTrendData(
 
   const data = await response.json()
   console.log('Trend data response:', data)
-  
+
   // Handle different response formats
   let dataArray: any[] = []
-  
+
   if (Array.isArray(data)) {
     // Direct array response
     dataArray = data
@@ -265,46 +276,74 @@ export async function getTrendData(
     console.warn('Unexpected trend data format:', data)
     return []
   }
-  
+
   // Map the data points to TrendDataPoint format
   console.log('Processing data array, length:', dataArray.length)
   if (dataArray.length > 0) {
     console.log('First data point sample:', dataArray[0])
   }
-  
+
   const mapped = dataArray.map((item: any, index: number) => {
     // Try multiple field names for date
-    const date = item.reportDate 
-      || item.report_date 
-      || item.report_date_as_yyyy_mm_dd 
-      || item.date 
+    const date = item.reportDate
+      || item.report_date
+      || item.report_date_as_yyyy_mm_dd
+      || item.date
       || item.Date
       || ''
-    
+
     // Try multiple field names for value
     const value = item.value !== undefined && item.value !== null
       ? item.value
       : (item[fieldName] !== undefined && item[fieldName] !== null)
       ? item[fieldName]
       : 0
-    
+
     if (!date) {
       if (index < 3) { // Only log first few to avoid spam
         console.warn('Invalid trend data point (missing date):', item)
       }
       return null
     }
-    
+
     const numValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0
-    
+
     return {
       reportDate: String(date),
       value: numValue,
     }
   }).filter((item): item is TrendDataPoint => item !== null)
-  
+
   console.log('Mapped trend data points:', mapped.length)
   return mapped
+}
+
+export async function getMultipleTrendData(
+  commodityName: string,
+  fieldNames: string[],
+  limit: number = 999
+): Promise<MultipleTrendResponse> {
+  const encodedCommodity = encodeURIComponent(commodityName)
+  const encodedFields = fieldNames.map(field => encodeURIComponent(field)).join(',')
+  const params = new URLSearchParams()
+  params.append('fields', encodedFields)
+  params.append('limit', limit.toString())
+
+  const response = await fetch(
+    `${BASE_URL}/cot/commodity/${encodedCommodity}/trends?${params.toString()}`,
+    {
+      headers: getHeaders(),
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch multiple trend data: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  console.log('Multiple trend data response:', data)
+
+  return data as MultipleTrendResponse
 }
 
 // Forecast API Types

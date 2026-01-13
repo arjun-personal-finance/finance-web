@@ -13,6 +13,7 @@ import {
   type HistoricalPricePoint,
 } from '@/lib/api'
 import TrendChart from './TrendChart'
+import NetPositionsChart from './NetPositionsChart'
 import ForecastSection from './ForecastSection'
 
 const COMMODITIES = ['SILVER', 'GOLD', 'COPPER', 'CRUDE OIL']
@@ -109,6 +110,10 @@ export default function ViewDataSection() {
   const [historicalData, setHistoricalData] = useState<CotDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Net Positions chart state
+  const [showNetPositionsPrice, setShowNetPositionsPrice] = useState(false)
+  const [netPositionsPriceData, setNetPositionsPriceData] = useState<HistoricalPricePoint[]>([])
 
   // Trend chart state
   const [selectedFields, setSelectedFields] = useState<string[]>([])
@@ -237,20 +242,45 @@ export default function ViewDataSection() {
 
 
 
+  // Load price data for NetPositionsChart
+  useEffect(() => {
+    if (showNetPositionsPrice) {
+      const symbol = getCommoditySymbol(commodity)
+      // Load price data from the earliest COT report date to today
+      // We'll use a reasonable start date since we don't have COT data dates yet
+      const startDate = '2000-01-01' // Start from year 2000 for comprehensive data
+      const endDate = new Date().toISOString().split('T')[0]
+
+      getHistoricalPriceData(symbol, startDate, endDate, '1d')
+        .then((data) => {
+          setNetPositionsPriceData(data)
+          if (data.length === 0) {
+            console.warn('No price data received for NetPositionsChart. This might be due to rate limiting.')
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to load price data for NetPositionsChart:', error)
+          setNetPositionsPriceData([])
+        })
+    } else {
+      setNetPositionsPriceData([])
+    }
+  }, [showNetPositionsPrice, commodity])
+
   useEffect(() => {
     if (showPriceVolume && Object.keys(trendDataMap).length > 0) {
       // Get first date from all trend data (earliest date across all fields)
       const allDates = Object.values(trendDataMap)
         .flatMap((data) => data.map((d) => d.reportDate))
         .sort()
-      
+
       if (allDates.length > 0) {
         const start = allDates[0] // First date of field series
         // End date is current date (today)
         const today = new Date().toISOString().split('T')[0]
-        
+
         const symbol = getCommoditySymbol(commodity)
-        
+
         getHistoricalPriceData(symbol, start, today, '1d')
           .then((data) => {
             setPriceVolumeData(data)
@@ -690,6 +720,30 @@ export default function ViewDataSection() {
           No historical data. {startDate || endDate ? 'Try adjusting date filters.' : 'Select date filters and click "Load Data".'}
         </div>
       )}
+
+      {/* Net Positions Chart */}
+      <div className="bg-gray-50 p-4 rounded-md space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Net Positions</h3>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="netPositionsPrice"
+              checked={showNetPositionsPrice}
+              onChange={(e) => setShowNetPositionsPrice(e.target.checked)}
+              className="mr-2"
+            />
+            <label htmlFor="netPositionsPrice" className="text-sm">
+              Add Price
+            </label>
+          </div>
+        </div>
+        <NetPositionsChart
+          commodityName={commodity}
+          showPrice={showNetPositionsPrice}
+          priceData={netPositionsPriceData}
+        />
+      </div>
 
       {/* Forecast Section */}
       <ForecastSection commodity={commodity} />
