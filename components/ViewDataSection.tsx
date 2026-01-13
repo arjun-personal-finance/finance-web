@@ -5,7 +5,7 @@ import {
   getCotDataByCommodity,
   getCotDataByDateRange,
   getLatestCotData,
-  getTrendData,
+  getMultipleTrendData,
   getHistoricalPriceData,
   getCommoditySymbol,
   type CotDataPoint,
@@ -180,30 +180,22 @@ export default function ViewDataSection() {
 
     setIsTrendLoading(true)
     try {
-      // Fetch data for all selected fields in parallel
-      const dataPromises = fields.map(async (field) => {
-        try {
-          const data = await getTrendData(commodity, field, 999)
-          return { field, data }
-        } catch (err: any) {
-          console.error(`Failed to load trend data for field ${field}:`, err)
-          return { field, data: [] }
-        }
-      })
-
-      const results = await Promise.all(dataPromises)
+      const response = await getMultipleTrendData(commodity, fields, 999)
       const newTrendDataMap: Record<string, TrendDataPoint[]> = {}
 
-      results.forEach(({ field, data }) => {
-        newTrendDataMap[field] = data
+      response.field_names.forEach(field => {
+        newTrendDataMap[field] = response.data_points.map(dp => ({
+          reportDate: dp.report_date,
+          value: dp.values[field] || 0
+        }))
       })
 
       setTrendDataMap(newTrendDataMap)
 
       // Load price/volume if enabled - use the earliest date from all fields
-      if (showPriceVolume && results.length > 0) {
-        const allDates = results
-          .flatMap(({ data }) => data.map((d) => d.reportDate))
+      if (showPriceVolume && Object.keys(newTrendDataMap).length > 0) {
+        const allDates = Object.values(newTrendDataMap)
+          .flatMap((data) => data.map((d) => d.reportDate))
           .sort()
 
         if (allDates.length > 0) {
