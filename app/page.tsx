@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import LoginModal from '@/components/LoginModal'
-import { isAuthenticated, logout } from '@/lib/auth'
+import { isAuthenticated, isAdmin, logout } from '@/lib/auth'
 
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false)
@@ -35,14 +35,24 @@ export default function Home() {
       href: '/cot',
       icon: '📊',
     },
-    // Add more items here as you create new views
-    // {
-    //   name: 'Another View',
-    //   description: 'Description of another view',
-    //   href: '/another-view',
-    //   icon: '📈',
-    // },
   ]
+
+  if (isAdmin()) {
+    menuItems.push({
+      name: 'Admin',
+      description: 'Administrative functions',
+      href: '/admin',
+      icon: '⚙️',
+    })
+  }
+
+  // Add more items here as you create new views
+  // {
+  //   name: 'Another View',
+  //   description: 'Description of another view',
+  //   href: '/another-view',
+  //   icon: '📈',
+  // },
 
   return (
     <>

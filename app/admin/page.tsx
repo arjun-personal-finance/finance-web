@@ -3,19 +3,21 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import ViewDataSection from '@/components/ViewDataSection'
-import { isAuthenticated } from '@/lib/auth'
+import IngestionSection from '@/components/IngestionSection'
+import { isAuthenticated, isAdmin } from '@/lib/auth'
 
-export default function CotPage() {
+export default function AdminPage() {
   const router = useRouter()
 
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push('/')
+    } else if (!isAdmin()) {
+      router.push('/')
     }
   }, [router])
 
-  if (!isAuthenticated()) {
+  if (!isAuthenticated() || !isAdmin()) {
     return null // Will redirect
   }
 
@@ -31,12 +33,12 @@ export default function CotPage() {
               ← Back to Home
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">
-              Commitment of Traders (COT) Data
+              Admin Panel
             </h1>
           </div>
         </div>
 
-        <ViewDataSection />
+        <IngestionSection />
       </div>
     </main>
   )
