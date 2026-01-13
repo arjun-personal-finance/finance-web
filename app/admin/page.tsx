@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import IngestionSection from '@/components/IngestionSection'
@@ -8,16 +8,33 @@ import { isAuthenticated, isAdmin } from '@/lib/auth'
 
 export default function AdminPage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAuth, setIsAuth] = useState(false)
+  const [isAdminUser, setIsAdminUser] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/')
-    } else if (!isAdmin()) {
+    const authStatus = isAuthenticated()
+    const adminStatus = isAdmin()
+    setIsAuth(authStatus)
+    setIsAdminUser(adminStatus)
+    setIsLoading(false)
+
+    if (!authStatus || !adminStatus) {
       router.push('/')
     }
   }, [router])
 
-  if (!isAuthenticated() || !isAdmin()) {
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-gray-50 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <div className="text-gray-600">Loading...</div>
+        </div>
+      </main>
+    )
+  }
+
+  if (!isAuth || !isAdminUser) {
     return null // Will redirect
   }
 

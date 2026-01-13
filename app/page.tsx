@@ -8,23 +8,31 @@ import { isAuthenticated, isAdmin, logout } from '@/lib/auth'
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAdminUser, setIsAdminUser] = useState(false)
 
   useEffect(() => {
     // Check authentication status on mount
-    setAuthenticated(isAuthenticated())
-    if (!isAuthenticated()) {
+    const authStatus = isAuthenticated()
+    setAuthenticated(authStatus)
+    setIsAdminUser(isAdmin())
+    setIsLoading(false)
+
+    if (!authStatus) {
       setShowLogin(true)
     }
   }, [])
 
   const handleLoginSuccess = () => {
     setAuthenticated(true)
+    setIsAdminUser(isAdmin())
     setShowLogin(false)
   }
 
   const handleLogout = () => {
     logout()
     setAuthenticated(false)
+    setIsAdminUser(false)
     setShowLogin(true)
   }
 
@@ -37,7 +45,7 @@ export default function Home() {
     },
   ]
 
-  if (isAdmin()) {
+  if (isAdminUser) {
     menuItems.push({
       name: 'Admin',
       description: 'Administrative functions',
