@@ -1134,8 +1134,8 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className={`px-3 py-3 ${header.colSpan > 1 ? 'text-center' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                      index < headerGroup.headers.length - 1 ? 'border-r border-gray-300' : ''
+                    className={`px-3 py-2 ${header.colSpan > 1 ? 'text-center' : 'text-left'} text-xs font-bold text-gray-500 uppercase tracking-wider ${
+                      index < headerGroup.headers.length - 1 ? 'border-r border-gray-400' : ''
                     }`}
                     style={{ width: header.getSize() }}
                   >
@@ -1163,9 +1163,9 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-400">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
+              <tr key={row.id} className="hover:bg-gray-50 border-b border-gray-400">
                 {row.getVisibleCells().map((cell, index) => {
                   // Extract the value for background coloring
                   let cellValue = 0
@@ -1216,7 +1216,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
                   return (
                     <td
                       key={cell.id}
-                      className={`px-3 py-2 whitespace-nowrap text-sm ${bgColorResult.className} ${
+                      className={`px-3 py-1 whitespace-nowrap text-sm ${bgColorResult.className} ${
                         index < row.getVisibleCells().length - 1 ? 'border-r border-gray-200' : ''
                       }`}
                       style={bgColorResult.style}
