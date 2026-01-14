@@ -14,6 +14,7 @@ import {
 } from '@/lib/api'
 import TrendChart from './TrendChart'
 import NetPositionsChart from './NetPositionsChart'
+import PositionsTable from './PositionsTable'
 import ForecastSection from './ForecastSection'
 
 const COMMODITIES = ['SILVER', 'GOLD', 'COPPER', 'CRUDE OIL']
@@ -114,6 +115,8 @@ export default function ViewDataSection() {
   // Net Positions chart state
   const [showNetPositionsPrice, setShowNetPositionsPrice] = useState(false)
   const [netPositionsPriceData, setNetPositionsPriceData] = useState<HistoricalPricePoint[]>([])
+  const [isNetPositionsExpanded, setIsNetPositionsExpanded] = useState(false)
+  const [isPositionsTableExpanded, setIsPositionsTableExpanded] = useState(false)
 
   // Trend chart state
   const [selectedFields, setSelectedFields] = useState<string[]>([])
@@ -135,7 +138,7 @@ export default function ViewDataSection() {
 
     try {
       console.log('Loading data for commodity:', commodity, 'startDate:', startDate, 'endDate:', endDate)
-      
+
       // Always load latest
       const latest = await getLatestCotData(commodity)
       console.log('Latest data received:', latest)
@@ -409,7 +412,7 @@ export default function ViewDataSection() {
               </span>
             </div>
           </div>
-          
+
           <div className="border-t border-green-200 pt-3 mt-3">
             <div className="text-sm font-semibold mb-2">Key Metrics</div>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -419,11 +422,10 @@ export default function ViewDataSection() {
                   <span className="font-medium">
                     {latestData.open_interest_all.toLocaleString()}
                     {latestData.change_in_open_interest_all !== undefined && (
-                      <span className={`ml-1 ${
-                        (latestData.change_in_open_interest_all || 0) >= 0
+                      <span className={`ml-1 ${(latestData.change_in_open_interest_all || 0) >= 0
                           ? 'text-green-700'
                           : 'text-red-700'
-                      }`}>
+                        }`}>
                         ({(latestData.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{latestData.change_in_open_interest_all.toLocaleString()})
                       </span>
                     )}
@@ -436,11 +438,10 @@ export default function ViewDataSection() {
                   <span className="font-medium">
                     {latestData.prod_merc_positions_long.toLocaleString()}
                     {latestData.change_in_prod_merc_long !== undefined && (
-                      <span className={`ml-1 ${
-                        (latestData.change_in_prod_merc_long || 0) >= 0
+                      <span className={`ml-1 ${(latestData.change_in_prod_merc_long || 0) >= 0
                           ? 'text-green-700'
                           : 'text-red-700'
-                      }`}>
+                        }`}>
                         ({(latestData.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{latestData.change_in_prod_merc_long.toLocaleString()})
                       </span>
                     )}
@@ -453,11 +454,10 @@ export default function ViewDataSection() {
                   <span className="font-medium">
                     {latestData.prod_merc_positions_short.toLocaleString()}
                     {latestData.change_in_prod_merc_short !== undefined && (
-                      <span className={`ml-1 ${
-                        (latestData.change_in_prod_merc_short || 0) >= 0
+                      <span className={`ml-1 ${(latestData.change_in_prod_merc_short || 0) >= 0
                           ? 'text-green-700'
                           : 'text-red-700'
-                      }`}>
+                        }`}>
                         ({(latestData.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{latestData.change_in_prod_merc_short.toLocaleString()})
                       </span>
                     )}
@@ -470,11 +470,10 @@ export default function ViewDataSection() {
                   <span className="font-medium">
                     {latestData.swap_positions_long_all.toLocaleString()}
                     {latestData.change_in_swap_long_all !== undefined && (
-                      <span className={`ml-1 ${
-                        (latestData.change_in_swap_long_all || 0) >= 0
+                      <span className={`ml-1 ${(latestData.change_in_swap_long_all || 0) >= 0
                           ? 'text-green-700'
                           : 'text-red-700'
-                      }`}>
+                        }`}>
                         ({(latestData.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_swap_long_all.toLocaleString()})
                       </span>
                     )}
@@ -487,11 +486,10 @@ export default function ViewDataSection() {
                   <span className="font-medium">
                     {latestData.swap__positions_short_all.toLocaleString()}
                     {latestData.change_in_swap_short_all !== undefined && (
-                      <span className={`ml-1 ${
-                        (latestData.change_in_swap_short_all || 0) >= 0
+                      <span className={`ml-1 ${(latestData.change_in_swap_short_all || 0) >= 0
                           ? 'text-green-700'
                           : 'text-red-700'
-                      }`}>
+                        }`}>
                         ({(latestData.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_swap_short_all.toLocaleString()})
                       </span>
                     )}
@@ -504,11 +502,10 @@ export default function ViewDataSection() {
                   <span className="font-medium">
                     {latestData.m_money_positions_long_all.toLocaleString()}
                     {latestData.change_in_m_money_long_all !== undefined && (
-                      <span className={`ml-1 ${
-                        (latestData.change_in_m_money_long_all || 0) >= 0
+                      <span className={`ml-1 ${(latestData.change_in_m_money_long_all || 0) >= 0
                           ? 'text-green-700'
                           : 'text-red-700'
-                      }`}>
+                        }`}>
                         ({(latestData.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_m_money_long_all.toLocaleString()})
                       </span>
                     )}
@@ -521,11 +518,10 @@ export default function ViewDataSection() {
                   <span className="font-medium">
                     {latestData.m_money_positions_short_all.toLocaleString()}
                     {latestData.change_in_m_money_short_all !== undefined && (
-                      <span className={`ml-1 ${
-                        (latestData.change_in_m_money_short_all || 0) >= 0
+                      <span className={`ml-1 ${(latestData.change_in_m_money_short_all || 0) >= 0
                           ? 'text-green-700'
                           : 'text-red-700'
-                      }`}>
+                        }`}>
                         ({(latestData.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_m_money_short_all.toLocaleString()})
                       </span>
                     )}
@@ -586,11 +582,10 @@ export default function ViewDataSection() {
                             <span className="font-medium">
                               {data.open_interest_all.toLocaleString()}
                               {data.change_in_open_interest_all !== undefined && (
-                                <span className={`ml-1 ${
-                                  (data.change_in_open_interest_all || 0) >= 0
+                                <span className={`ml-1 ${(data.change_in_open_interest_all || 0) >= 0
                                     ? 'text-green-600'
                                     : 'text-red-600'
-                                }`}>
+                                  }`}>
                                   ({(data.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{data.change_in_open_interest_all.toLocaleString()})
                                 </span>
                               )}
@@ -603,11 +598,10 @@ export default function ViewDataSection() {
                             <span className="font-medium">
                               {data.prod_merc_positions_long.toLocaleString()}
                               {data.change_in_prod_merc_long !== undefined && (
-                                <span className={`ml-1 ${
-                                  (data.change_in_prod_merc_long || 0) >= 0
+                                <span className={`ml-1 ${(data.change_in_prod_merc_long || 0) >= 0
                                     ? 'text-green-600'
                                     : 'text-red-600'
-                                }`}>
+                                  }`}>
                                   ({(data.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{data.change_in_prod_merc_long.toLocaleString()})
                                 </span>
                               )}
@@ -620,11 +614,10 @@ export default function ViewDataSection() {
                             <span className="font-medium">
                               {data.prod_merc_positions_short.toLocaleString()}
                               {data.change_in_prod_merc_short !== undefined && (
-                                <span className={`ml-1 ${
-                                  (data.change_in_prod_merc_short || 0) >= 0
+                                <span className={`ml-1 ${(data.change_in_prod_merc_short || 0) >= 0
                                     ? 'text-green-600'
                                     : 'text-red-600'
-                                }`}>
+                                  }`}>
                                   ({(data.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{data.change_in_prod_merc_short.toLocaleString()})
                                 </span>
                               )}
@@ -637,11 +630,10 @@ export default function ViewDataSection() {
                             <span className="font-medium">
                               {data.swap_positions_long_all.toLocaleString()}
                               {data.change_in_swap_long_all !== undefined && (
-                                <span className={`ml-1 ${
-                                  (data.change_in_swap_long_all || 0) >= 0
+                                <span className={`ml-1 ${(data.change_in_swap_long_all || 0) >= 0
                                     ? 'text-green-600'
                                     : 'text-red-600'
-                                }`}>
+                                  }`}>
                                   ({(data.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{data.change_in_swap_long_all.toLocaleString()})
                                 </span>
                               )}
@@ -654,11 +646,10 @@ export default function ViewDataSection() {
                             <span className="font-medium">
                               {data.swap__positions_short_all.toLocaleString()}
                               {data.change_in_swap_short_all !== undefined && (
-                                <span className={`ml-1 ${
-                                  (data.change_in_swap_short_all || 0) >= 0
+                                <span className={`ml-1 ${(data.change_in_swap_short_all || 0) >= 0
                                     ? 'text-green-600'
                                     : 'text-red-600'
-                                }`}>
+                                  }`}>
                                   ({(data.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{data.change_in_swap_short_all.toLocaleString()})
                                 </span>
                               )}
@@ -671,11 +662,10 @@ export default function ViewDataSection() {
                             <span className="font-medium">
                               {data.m_money_positions_long_all.toLocaleString()}
                               {data.change_in_m_money_long_all !== undefined && (
-                                <span className={`ml-1 ${
-                                  (data.change_in_m_money_long_all || 0) >= 0
+                                <span className={`ml-1 ${(data.change_in_m_money_long_all || 0) >= 0
                                     ? 'text-green-600'
                                     : 'text-red-600'
-                                }`}>
+                                  }`}>
                                   ({(data.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{data.change_in_m_money_long_all.toLocaleString()})
                                 </span>
                               )}
@@ -688,11 +678,10 @@ export default function ViewDataSection() {
                             <span className="font-medium">
                               {data.m_money_positions_short_all.toLocaleString()}
                               {data.change_in_m_money_short_all !== undefined && (
-                                <span className={`ml-1 ${
-                                  (data.change_in_m_money_short_all || 0) >= 0
+                                <span className={`ml-1 ${(data.change_in_m_money_short_all || 0) >= 0
                                     ? 'text-green-600'
                                     : 'text-red-600'
-                                }`}>
+                                  }`}>
                                   ({(data.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{data.change_in_m_money_short_all.toLocaleString()})
                                 </span>
                               )}
@@ -715,26 +704,52 @@ export default function ViewDataSection() {
 
       {/* Net Positions Chart */}
       <div className="bg-gray-50 p-4 rounded-md space-y-4">
-        <div className="flex items-center justify-between">
+        <div
+          onClick={() => setIsNetPositionsExpanded(!isNetPositionsExpanded)}
+          className="flex items-center justify-between cursor-pointer hover:bg-gray-100 p-2 rounded -mx-2 px-2 -mt-2"
+        >
           <h3 className="font-semibold">Net Positions</h3>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="netPositionsPrice"
-              checked={showNetPositionsPrice}
-              onChange={(e) => setShowNetPositionsPrice(e.target.checked)}
-              className="mr-2"
-            />
-            <label htmlFor="netPositionsPrice" className="text-sm">
-              Add Price
-            </label>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="netPositionsPrice"
+                checked={showNetPositionsPrice}
+                onChange={(e) => setShowNetPositionsPrice(e.target.checked)}
+                className="mr-2"
+              />
+              <label htmlFor="netPositionsPrice" className="text-sm">
+                Add Price
+              </label>
+            </div>
+            <span className="text-gray-400 text-lg">
+              {isNetPositionsExpanded ? '▲' : '▼'}
+            </span>
           </div>
         </div>
-        <NetPositionsChart
-          commodityName={commodity}
-          showPrice={showNetPositionsPrice}
-          priceData={netPositionsPriceData}
-        />
+        {isNetPositionsExpanded && (
+          <NetPositionsChart
+            commodityName={commodity}
+            showPrice={showNetPositionsPrice}
+            priceData={netPositionsPriceData}
+          />
+        )}
+      </div>
+
+      {/* Positions Table */}
+      <div className="bg-gray-50 p-4 rounded-md space-y-4">
+        <div
+          onClick={() => setIsPositionsTableExpanded(!isPositionsTableExpanded)}
+          className="flex items-center justify-between cursor-pointer hover:bg-gray-100 p-2 rounded -mx-2 px-2 -mt-2"
+        >
+          <h3 className="font-semibold">Positions Table</h3>
+          <span className="text-gray-400 text-lg">
+            {isPositionsTableExpanded ? '▲' : '▼'}
+          </span>
+        </div>
+        {isPositionsTableExpanded && (
+          <PositionsTable commodityName={commodity} />
+        )}
       </div>
 
       {/* Forecast Section */}
