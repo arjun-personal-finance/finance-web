@@ -413,7 +413,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
         cell: ({ getValue }) => {
           const date = getValue() as string
           return (
-            <div className="font-medium text-gray-900">
+            <div className="font-medium text-gray-900 text-center">
               {new Date(date).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
@@ -431,7 +431,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
         cell: ({ getValue }) => {
           const value = getValue() as number
           return (
-            <div className="text-right font-medium text-gray-900">
+            <div className="text-center font-medium text-gray-900">
               {value?.toLocaleString() || '-'}
             </div>
           )
@@ -449,7 +449,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -463,7 +463,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -477,7 +477,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'long')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'long')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -491,7 +491,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'short')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'short')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -504,7 +504,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-bold">
+                <div className="text-center font-bold">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -562,7 +562,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -576,7 +576,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -590,7 +590,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'long')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'long')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -604,7 +604,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'short')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'short')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -617,7 +617,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-bold">
+                <div className="text-center font-bold">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -694,7 +694,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -708,7 +708,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -722,7 +722,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'long')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'long')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -736,7 +736,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'short')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'short')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -749,7 +749,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-bold">
+                <div className="text-center font-bold">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -826,7 +826,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -840,7 +840,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -854,7 +854,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'long')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'long')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -868,7 +868,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'short')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'short')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -881,7 +881,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-bold">
+                <div className="text-center font-bold">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -958,7 +958,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -972,7 +972,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-medium">
+                <div className="text-center font-medium">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -986,7 +986,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'long')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'long')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -1000,7 +1000,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className={`text-right font-medium ${getChangeColor(value, 'short')}`}>
+                <div className={`text-center font-medium ${getChangeColor(value, 'short')}`}>
                   {value ? `${value > 0 ? '+' : ''}${value.toLocaleString()}${getChangeArrow(value)}` : '-'}
                 </div>
               )
@@ -1013,7 +1013,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             cell: ({ getValue }) => {
               const value = getValue() as number
               return (
-                <div className="text-right font-bold">
+                <div className="text-center font-bold">
                   {value?.toLocaleString() || '-'}
                 </div>
               )
@@ -1134,7 +1134,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className={`px-3 py-2 ${header.colSpan > 1 ? 'text-center' : 'text-left'} text-xs font-bold text-gray-500 uppercase tracking-wider ${
+                    className={`px-1 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider ${
                       index < headerGroup.headers.length - 1 ? 'border-r border-gray-400' : ''
                     }`}
                     style={{ width: header.getSize() }}
@@ -1216,7 +1216,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
                   return (
                     <td
                       key={cell.id}
-                      className={`px-3 py-1 whitespace-nowrap text-sm ${bgColorResult.className} ${
+                      className={`px-1 py-1 whitespace-nowrap text-sm ${bgColorResult.className} ${
                         index < row.getVisibleCells().length - 1 ? 'border-r border-gray-200' : ''
                       }`}
                       style={bgColorResult.style}
