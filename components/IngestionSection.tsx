@@ -5,6 +5,14 @@ import { ingestCotData } from '@/lib/api'
 
 const COMMODITIES = ['SILVER', 'GOLD', 'COPPER', 'CRUDE OIL']
 
+// Mapping from commodity names to CFTC codes
+const COMMODITY_CFTC_MAPPING: Record<string, string> = {
+  "GOLD": "088691",
+  "SILVER": "084691",
+  "COPPER": "085692",
+  "CRUDE OIL": "067651"
+}
+
 export default function IngestionSection() {
   const [commodity, setCommodity] = useState('SILVER')
   const [startDate, setStartDate] = useState(() => {
@@ -27,8 +35,14 @@ export default function IngestionSection() {
     setError(null)
 
     try {
+      // Map commodity name to CFTC code
+      const cftcCode = COMMODITY_CFTC_MAPPING[commodity]
+      if (!cftcCode) {
+        throw new Error(`No CFTC code mapping found for commodity: ${commodity}`)
+      }
+
       const result = await ingestCotData(
-        commodity,
+        cftcCode,  // Send CFTC code instead of commodity name
         startDate || undefined,
         endDate || undefined
       )
