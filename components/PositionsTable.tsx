@@ -12,6 +12,7 @@ import {
   PaginationState,
 } from '@tanstack/react-table'
 import { getMultipleTrendData, type MultipleTrendDataPoint } from '@/lib/api'
+import * as XLSX from 'xlsx'
 
 // Types
 interface PositionsTableProps {
@@ -99,9 +100,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
       // Use getMultipleTrendData like NetPositionsChart does
       const response = await getMultipleTrendData(commodityName, requiredFields, 999)
 
-      // Debug: Log the response structure
-      console.log('PositionsTable - API Response:', response)
-      console.log('PositionsTable - First data point:', response.data_points[0])
+      // Debug: Log the response structure (removed for production)
 
       // Calculate how many weeks back we want (weeks * 7 days)
       const weeksInMs = weeks * 7 * 24 * 60 * 60 * 1000
@@ -295,6 +294,92 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
   // Handle submit button click
   const handleSubmit = () => {
     setWeeks(weeksInput)
+  }
+
+  // Export to XLSX function
+  const exportToXLSX = () => {
+    if (data.length === 0) return
+
+    // Flatten the data structure for export
+    const exportData = data.map(row => ({
+      'Report Date': new Date(row.report_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+      'Open Interest': row.values.open_interest_all || 0,
+
+      // Producer/Merchant
+      'Prod/Merc Long Position': row.values.prod_merc_positions_long || 0,
+      'Prod/Merc Short Position': row.values.prod_merc_positions_short || 0,
+      'Prod/Merc Change Long': row.values.change_in_prod_merc_long || 0,
+      'Prod/Merc Change Short': row.values.change_in_prod_merc_short || 0,
+      'Prod/Merc Net Position': row.prodMercNet || 0,
+      'Prod/Merc %OI Long': row.prodMercPctOiLong?.toFixed(2) || 0,
+      'Prod/Merc %OI Short': row.prodMercPctOiShort?.toFixed(2) || 0,
+
+      // Managed Money
+      'Managed Money Long Position': row.values.m_money_positions_long_all || 0,
+      'Managed Money Short Position': row.values.m_money_positions_short_all || 0,
+      'Managed Money Change Long': row.values.change_in_m_money_long_all || 0,
+      'Managed Money Change Short': row.values.change_in_m_money_short_all || 0,
+      'Managed Money Spread': row.values.m_money_positions_spread || 0,
+      'Managed Money Net Position': row.mMoneyNet || 0,
+      'Managed Money %OI Long': row.mMoneyPctOiLong?.toFixed(2) || 0,
+      'Managed Money %OI Short': row.mMoneyPctOiShort?.toFixed(2) || 0,
+      'Managed Money %OI Spread': row.mMoneyPctOiSpread?.toFixed(2) || 0,
+
+      // Swaps
+      'Swaps Long Position': row.values.swap_positions_long_all || 0,
+      'Swaps Short Position': row.values.swap__positions_short_all || 0,
+      'Swaps Change Long': row.values.change_in_swap_long_all || 0,
+      'Swaps Change Short': row.values.change_in_swap_short_all || 0,
+      'Swaps Spread': row.values.swap__positions_spread_all || 0,
+      'Swaps Net Position': row.swapNet || 0,
+      'Swaps %OI Long': row.swapPctOiLong?.toFixed(2) || 0,
+      'Swaps %OI Short': row.swapPctOiShort?.toFixed(2) || 0,
+      'Swaps %OI Spread': row.swapPctOiSpread?.toFixed(2) || 0,
+
+      // Other Reportables
+      'Other Reportables Long Position': row.values.other_rept_positions_long || 0,
+      'Other Reportables Short Position': row.values.other_rept_positions_short || 0,
+      'Other Reportables Change Long': row.values.change_in_other_rept_long || 0,
+      'Other Reportables Change Short': row.values.change_in_other_rept_short || 0,
+      'Other Reportables Spread': row.values.other_rept_positions_spread || 0,
+      'Other Reportables Net Position': row.otherReptNet || 0,
+      'Other Reportables %OI Long': row.otherReptPctOiLong?.toFixed(2) || 0,
+      'Other Reportables %OI Short': row.otherReptPctOiShort?.toFixed(2) || 0,
+      'Other Reportables %OI Spread': row.otherReptPctOiSpread?.toFixed(2) || 0,
+
+      // Non Reportables
+      'Non Reportables Long Position': row.values.nonrept_positions_long_all || 0,
+      'Non Reportables Short Position': row.values.nonrept_positions_short_all || 0,
+      'Non Reportables Change Long': row.values.change_in_nonrept_long_all || 0,
+      'Non Reportables Change Short': row.values.change_in_nonrept_short_all || 0,
+      'Non Reportables Net Position': row.nonreptNet || 0,
+      'Non Reportables %OI Long': row.nonreptPctOiLong?.toFixed(2) || 0,
+      'Non Reportables %OI Short': row.nonreptPctOiShort?.toFixed(2) || 0,
+    }))
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    // Auto-size columns
+    const colWidths = Object.keys(exportData[0]).map(key => ({
+      wch: Math.max(key.length, 15) // Minimum width of 15, or header length
+    }))
+    ws['!cols'] = colWidths
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, `${commodityName} Positions`)
+
+    // Generate filename with current date
+    const dateStr = new Date().toISOString().split('T')[0]
+    const filename = `${commodityName}_positions_${dateStr}.xlsx`
+
+    // Save file
+    XLSX.writeFile(wb, filename)
   }
 
   // Helper functions for color coding
@@ -1103,6 +1188,13 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Positions Table</h3>
         <div className="flex items-center space-x-2">
+          <button
+            onClick={exportToXLSX}
+            disabled={data.length === 0}
+            className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Export XLSX
+          </button>
           <label htmlFor="weeks" className="text-sm font-medium">
             Weeks:
           </label>
