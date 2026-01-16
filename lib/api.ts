@@ -29,6 +29,10 @@ export interface CotDataPoint {
   swap__positions_short_all?: number
   m_money_positions_long_all?: number
   m_money_positions_short_all?: number
+  other_rept_positions_long?: number
+  other_rept_positions_short?: number
+  nonrept_positions_long_all?: number
+  nonrept_positions_short_all?: number
   change_in_open_interest_all?: number
   change_in_prod_merc_long?: number
   change_in_prod_merc_short?: number
@@ -36,6 +40,16 @@ export interface CotDataPoint {
   change_in_swap_short_all?: number
   change_in_m_money_long_all?: number
   change_in_m_money_short_all?: number
+  change_in_other_rept_long?: number
+  change_in_other_rept_short?: number
+  change_in_nonrept_long_all?: number
+  change_in_nonrept_short_all?: number
+  // Calculated net positions
+  m_money_net?: number
+  prod_merc_net?: number
+  swap_net?: number
+  other_rept_net?: number
+  nonrept_net?: number
   [key: string]: any
 }
 

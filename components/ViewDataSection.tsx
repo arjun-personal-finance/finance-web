@@ -50,6 +50,13 @@ const FIELD_CATEGORIES = [
       'Provides additional context on market participation beyond the main trader categories.',
   },
   {
+    name: 'Non Reportables',
+    fields: ['nonrept_positions_long_all', 'nonrept_positions_short_all'],
+    meaning: 'Positions held by non-reportable traders (small traders not required to report).',
+    whyItMatters:
+      'Provides context on the broader market participation including smaller traders.',
+  },
+  {
     name: 'Change from Previous Week',
     fields: [
       'change_in_open_interest_all',
@@ -61,6 +68,8 @@ const FIELD_CATEGORIES = [
       'change_in_swap_short_all',
       'change_in_other_rept_long',
       'change_in_other_rept_short',
+      'change_in_nonrept_long_all',
+      'change_in_nonrept_short_all',
     ],
     meaning: 'Shows momentum — whether traders are piling into or out of positions.',
     whyItMatters: 'Sudden changes often precede price moves.',
@@ -77,6 +86,8 @@ const FIELD_CATEGORIES = [
       'pct_of_oi_swap_short_all',
       'pct_of_oi_other_rept_long',
       'pct_of_oi_other_rept_short',
+      'pct_of_oi_nonrept_long_all',
+      'pct_of_oi_nonrept_short_all',
     ],
     meaning: 'Normalizes positions across different markets and contract sizes.',
     whyItMatters:
@@ -94,14 +105,33 @@ const FIELD_CATEGORIES = [
       'traders_swap_short_all',
       'traders_other_rept_long_all',
       'traders_other_rept_short',
+      'traders_nonrept_long_all',
+      'traders_nonrept_short_all',
     ],
     meaning: 'Indicates breadth of participation in the market.',
     whyItMatters:
       'If large positions come from very few traders, the signal may be weaker.',
   },
+  {
+    name: 'Net',
+    fields: ['m_money_net', 'prod_merc_net', 'swap_net', 'other_rept_net', 'nonrept_net'],
+    meaning: 'Net positions (long - short) for each trader category.',
+    whyItMatters: 'Shows the overall positioning bias for each trader type.',
+  },
 ]
 
 const ALL_FIELDS = FIELD_CATEGORIES.flatMap((cat) => cat.fields)
+
+// Helper function to calculate net positions
+const calculateNetPositions = (data: CotDataPoint): CotDataPoint => {
+  const updated = { ...data }
+  updated.m_money_net = (data.m_money_positions_long_all || 0) - (data.m_money_positions_short_all || 0)
+  updated.prod_merc_net = (data.prod_merc_positions_long || 0) - (data.prod_merc_positions_short || 0)
+  updated.swap_net = (data.swap_positions_long_all || 0) - (data.swap__positions_short_all || 0)
+  updated.other_rept_net = (data.other_rept_positions_long || 0) - (data.other_rept_positions_short || 0)
+  updated.nonrept_net = (data.nonrept_positions_long_all || 0) - (data.nonrept_positions_short_all || 0)
+  return updated
+}
 
 export default function ViewDataSection() {
   const [commodity, setCommodity] = useState('SILVER')
@@ -140,7 +170,10 @@ export default function ViewDataSection() {
       console.log('Loading data for commodity:', commodity, 'startDate:', startDate, 'endDate:', endDate)
 
       // Always load latest
-      const latest = await getLatestCotData(commodity)
+      let latest = await getLatestCotData(commodity)
+      if (latest) {
+        latest = calculateNetPositions(latest)
+      }
       console.log('Latest data received:', latest)
       setLatestData(latest)
 
@@ -156,6 +189,9 @@ export default function ViewDataSection() {
       }
 
       console.log('Historical data received:', historical.length, 'records')
+
+      // Calculate net positions for historical data
+      historical = historical.map(calculateNetPositions)
 
       // Sort by date descending
       historical.sort((a, b) => {
@@ -183,14 +219,62 @@ export default function ViewDataSection() {
 
     setIsTrendLoading(true)
     try {
-      const response = await getMultipleTrendData(commodity, fields, 999)
+      // Separate regular fields from calculated net fields
+      const regularFields: string[] = []
+      const netFieldMap: Record<string, { long: string; short: string }> = {}
+
+      fields.forEach(field => {
+        if (field === 'm_money_net') {
+          netFieldMap[field] = { long: 'm_money_positions_long_all', short: 'm_money_positions_short_all' }
+        } else if (field === 'prod_merc_net') {
+          netFieldMap[field] = { long: 'prod_merc_positions_long', short: 'prod_merc_positions_short' }
+        } else if (field === 'swap_net') {
+          netFieldMap[field] = { long: 'swap_positions_long_all', short: 'swap__positions_short_all' }
+        } else if (field === 'other_rept_net') {
+          netFieldMap[field] = { long: 'other_rept_positions_long', short: 'other_rept_positions_short' }
+        } else if (field === 'nonrept_net') {
+          netFieldMap[field] = { long: 'nonrept_positions_long_all', short: 'nonrept_positions_short_all' }
+        } else {
+          regularFields.push(field)
+        }
+      })
+
+      // Fetch regular fields
+      const fieldsToFetch = [...regularFields, ...Object.values(netFieldMap).flatMap(({ long, short }) => [long, short])]
+
+      const response = await getMultipleTrendData(commodity, fieldsToFetch, 999)
       const newTrendDataMap: Record<string, TrendDataPoint[]> = {}
 
-      response.field_names.forEach(field => {
-        newTrendDataMap[field] = response.data_points.map(dp => ({
+      // Process regular fields
+      regularFields.forEach(field => {
+        if (response.field_names.includes(field)) {
+          newTrendDataMap[field] = response.data_points.map(dp => ({
+            reportDate: dp.report_date,
+            value: dp.values[field] || 0
+          }))
+        }
+      })
+
+      // Process calculated net fields
+      Object.entries(netFieldMap).forEach(([netField, { long, short }]) => {
+        const longData = response.field_names.includes(long) ? response.data_points.map(dp => ({
           reportDate: dp.report_date,
-          value: dp.values[field] || 0
-        }))
+          value: dp.values[long] || 0
+        })) : []
+
+        const shortData = response.field_names.includes(short) ? response.data_points.map(dp => ({
+          reportDate: dp.report_date,
+          value: dp.values[short] || 0
+        })) : []
+
+        // Calculate net positions
+        newTrendDataMap[netField] = longData.map((longPoint, index) => {
+          const shortPoint = shortData[index]
+          return {
+            reportDate: longPoint.reportDate,
+            value: (longPoint.value || 0) - (shortPoint?.value || 0)
+          }
+        })
       })
 
       setTrendDataMap(newTrendDataMap)
