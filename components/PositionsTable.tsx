@@ -51,6 +51,7 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
     pageIndex: 0,
     pageSize: 25,
   })
+  const [pageInput, setPageInput] = useState<string>('')
 
   // Track the input value separately from the actual weeks used for fetching
   const [weeksInput, setWeeksInput] = useState(26)
@@ -294,6 +295,24 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
   // Handle submit button click
   const handleSubmit = () => {
     setWeeks(weeksInput)
+  }
+
+  // Handle page jump
+  const handlePageJump = () => {
+    const pageNumber = parseInt(pageInput, 10)
+    const totalPages = table.getPageCount()
+
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      table.setPageIndex(pageNumber - 1) // Convert to 0-based index
+      setPageInput('') // Clear input after jump
+    }
+  }
+
+  // Handle Enter key press in page input
+  const handlePageInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handlePageJump()
+    }
   }
 
   // Export to XLSX function
@@ -1346,6 +1365,22 @@ export default function PositionsTable({ commodityName }: PositionsTableProps) {
             Page {table.getState().pagination.pageIndex + 1} of{' '}
             {table.getPageCount()}
           </span>
+          <div className="flex items-center space-x-1">
+            <label htmlFor="page-input" className="text-xs">
+              Go to:
+            </label>
+            <input
+              id="page-input"
+              type="number"
+              min="1"
+              max={table.getPageCount()}
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              onKeyDown={handlePageInputKeyPress}
+              className="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs text-center"
+              placeholder={(table.getState().pagination.pageIndex + 1).toString()}
+            />
+          </div>
           <span>({data.length} total records)</span>
         </div>
       </div>
