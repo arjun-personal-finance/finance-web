@@ -6,7 +6,7 @@ function getHeaders(): HeadersInit {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   }
-  
+
   // Get token from localStorage
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('auth_token')
@@ -14,8 +14,38 @@ function getHeaders(): HeadersInit {
       headers['Authorization'] = `Bearer ${token}`
     }
   }
-  
+
   return headers
+}
+
+// Import logout function
+import { logout } from './auth'
+
+// Wrapper function to handle authenticated fetch requests
+async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  // Add auth headers
+  const headers = getHeaders()
+  const authOptions = {
+    ...options,
+    headers: {
+      ...headers,
+      ...options.headers,
+    },
+  }
+
+  const response = await fetch(url, authOptions)
+
+  // Check for unauthorized response
+  if (response.status === 401) {
+    logout()
+    // Redirect to home page to show login modal
+    if (typeof window !== 'undefined') {
+      window.location.href = '/'
+    }
+    throw new Error('Unauthorized - logged out')
+  }
+
+  return response
 }
 
 // Types
@@ -115,9 +145,8 @@ export async function ingestCotData(
   if (startDate) params.append('start_date', startDate)
   if (endDate) params.append('end_date', endDate)
 
-  const response = await fetch(`${BASE_URL}/cot/ingest?${params.toString()}`, {
+  const response = await authenticatedFetch(`${BASE_URL}/cot/ingest?${params.toString()}`, {
     method: 'POST',
-    headers: getHeaders(),
   })
 
   if (!response.ok) {
@@ -156,9 +185,7 @@ export async function getCotDataByCommodity(
   commodityName: string
 ): Promise<CotDataPoint[]> {
   const encoded = encodeURIComponent(commodityName)
-  const response = await fetch(`${BASE_URL}/cot/commodity/${encoded}`, {
-    headers: getHeaders(),
-  })
+  const response = await authenticatedFetch(`${BASE_URL}/cot/commodity/${encoded}`)
 
   if (!response.ok) {
     throw new Error(`Failed to fetch COT data: ${response.statusText}`)
@@ -188,11 +215,8 @@ export async function getCotDataByDateRange(
   params.append('start_date', startDate)
   params.append('end_date', endDate)
 
-  const response = await fetch(
-    `${BASE_URL}/cot/commodity/${encoded}/date-range?${params.toString()}`,
-    {
-      headers: getHeaders(),
-    }
+  const response = await authenticatedFetch(
+    `${BASE_URL}/cot/commodity/${encoded}/date-range?${params.toString()}`
   )
 
   if (!response.ok) {
@@ -218,9 +242,7 @@ export async function getLatestCotData(
   commodityName: string
 ): Promise<CotDataPoint | null> {
   const encoded = encodeURIComponent(commodityName)
-  const response = await fetch(`${BASE_URL}/cot/commodity/${encoded}/latest`, {
-    headers: getHeaders(),
-  })
+  const response = await authenticatedFetch(`${BASE_URL}/cot/commodity/${encoded}/latest`)
 
   if (!response.ok) {
     throw new Error(`Failed to fetch latest COT data: ${response.statusText}`)
@@ -260,11 +282,8 @@ export async function getTrendData(
   const params = new URLSearchParams()
   params.append('limit', limit.toString())
 
-  const response = await fetch(
-    `${BASE_URL}/cot/commodity/${encodedCommodity}/trend/${encodedField}?${params.toString()}`,
-    {
-      headers: getHeaders(),
-    }
+  const response = await authenticatedFetch(
+    `${BASE_URL}/cot/commodity/${encodedCommodity}/trend/${encodedField}?${params.toString()}`
   )
 
   if (!response.ok) {
@@ -343,11 +362,8 @@ export async function getMultipleTrendData(
   params.append('fields', encodedFields)
   params.append('limit', limit.toString())
 
-  const response = await fetch(
-    `${BASE_URL}/cot/commodity/${encodedCommodity}/trends?${params.toString()}`,
-    {
-      headers: getHeaders(),
-    }
+  const response = await authenticatedFetch(
+    `${BASE_URL}/cot/commodity/${encodedCommodity}/trends?${params.toString()}`
   )
 
   if (!response.ok) {
@@ -505,9 +521,7 @@ export interface ForecastFeatures {
 // Forecast API Functions
 export async function getForecastDashboard(commodity: string): Promise<ForecastDashboard> {
   const encoded = encodeURIComponent(commodity)
-  const response = await fetch(`${BASE_URL}/forecast/${encoded}/dashboard`, {
-    headers: getHeaders(),
-  })
+  const response = await authenticatedFetch(`${BASE_URL}/forecast/${encoded}/dashboard`)
 
   if (!response.ok) {
     throw new Error(`Failed to fetch forecast dashboard: ${response.statusText}`)
@@ -518,9 +532,7 @@ export async function getForecastDashboard(commodity: string): Promise<ForecastD
 
 export async function getForecastSignal(commodity: string): Promise<ForecastSignal> {
   const encoded = encodeURIComponent(commodity)
-  const response = await fetch(`${BASE_URL}/forecast/${encoded}/signal`, {
-    headers: getHeaders(),
-  })
+  const response = await authenticatedFetch(`${BASE_URL}/forecast/${encoded}/signal`)
 
   if (!response.ok) {
     throw new Error(`Failed to fetch forecast signal: ${response.statusText}`)
@@ -531,9 +543,7 @@ export async function getForecastSignal(commodity: string): Promise<ForecastSign
 
 export async function getForecastFeatures(commodity: string): Promise<ForecastFeatures> {
   const encoded = encodeURIComponent(commodity)
-  const response = await fetch(`${BASE_URL}/forecast/${encoded}/features`, {
-    headers: getHeaders(),
-  })
+  const response = await authenticatedFetch(`${BASE_URL}/forecast/${encoded}/features`)
 
   if (!response.ok) {
     throw new Error(`Failed to fetch forecast features: ${response.statusText}`)
@@ -562,11 +572,8 @@ export async function getHistoricalPriceData(
   }
 
   try {
-    const response = await fetch(
-      `https://finance-backend-ou68.onrender.com/api/v1/prices/historical/${encoded}?${params.toString()}`,
-      {
-        headers: getHeaders(),
-      }
+    const response = await authenticatedFetch(
+      `https://finance-backend-ou68.onrender.com/api/v1/prices/historical/${encoded}?${params.toString()}`
     )
 
     if (!response.ok) {
@@ -632,4 +639,13 @@ export async function getHistoricalPriceData(
     return []
   }
 }
+
+
+
+
+
+
+
+
+
 
