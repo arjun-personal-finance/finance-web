@@ -800,6 +800,7 @@ export default function ViewDataSection() {
                 id="netPositionsPrice"
                 checked={showNetPositionsPrice}
                 onChange={(e) => setShowNetPositionsPrice(e.target.checked)}
+                onClick={(e) => e.stopPropagation()}
                 className="mr-2"
               />
               <label htmlFor="netPositionsPrice" className="text-sm">
