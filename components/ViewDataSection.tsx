@@ -122,6 +122,37 @@ const FIELD_CATEGORIES = [
 
 const ALL_FIELDS = FIELD_CATEGORIES.flatMap((cat) => cat.fields)
 
+// Helper function to format date as MMM DD
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+// Helper function to add/subtract days from a date
+const addDays = (dateStr: string, days: number): string => {
+  const date = new Date(dateStr)
+  date.setDate(date.getDate() + days)
+  return date.toISOString().split('T')[0]
+}
+
+// Helper function to get the Monday of the week for a given date
+const getMondayOfWeek = (dateStr: string): string => {
+  const date = new Date(dateStr)
+  const day = date.getDay()
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
+  const monday = new Date(date.setDate(diff))
+  return monday.toISOString().split('T')[0]
+}
+
+// Helper function to get the Friday of the week for a given date
+const getFridayOfWeek = (dateStr: string): string => {
+  const date = new Date(dateStr)
+  const day = date.getDay()
+  const diff = date.getDate() + (5 - day) // Friday is day 5
+  const friday = new Date(date.setDate(diff))
+  return friday.toISOString().split('T')[0]
+}
+
 // Helper function to calculate net positions
 const calculateNetPositions = (data: CotDataPoint): CotDataPoint => {
   const updated = { ...data }
@@ -159,6 +190,14 @@ export default function ViewDataSection() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [isFieldSelectorExpanded, setIsFieldSelectorExpanded] = useState(false)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Price change data state - keyed by report date
+  const [priceChangeData, setPriceChangeData] = useState<Record<string, {
+    previousWeek: { from: string; to: string; change: number; absChange: number } | null;
+    currentWeekMTD: { from: string; to: string; change: number; absChange: number } | null;
+    postReport: { from: string; to: string; change: number; absChange: number } | null;
+    loading: boolean;
+  }>>({})
 
 
 
@@ -415,6 +454,153 @@ export default function ViewDataSection() {
 
   const shouldApply = selectedFields.length === 0 || !arraysEqual(tempSelectedFields, selectedFields)
 
+  // Function to fetch and calculate price changes for a given report date
+  const fetchPriceChanges = useCallback(async (reportDate: string, commodityName: string) => {
+    // Check if we already have data for this date
+    if (priceChangeData[reportDate]) {
+      return
+    }
+
+    // Set loading state
+    setPriceChangeData(prev => ({
+      ...prev,
+      [reportDate]: { previousWeek: null, currentWeekMTD: null, postReport: null, loading: true }
+    }))
+
+    try {
+      const symbol = getCommoditySymbol(commodityName)
+
+      // Calculate date ranges
+      // Report date is typically a Tuesday
+      const reportDateObj = new Date(reportDate)
+
+      // 1. Previous Week: From previous Tuesday (7 days before) to report date
+      const prevWeekStart = addDays(reportDate, -7)
+
+      // 2. Current Week MTD: From Monday of current week to report date
+      const mondayOfWeek = getMondayOfWeek(reportDate)
+
+      // 3. Post Report: From report date to end of week Friday (report date + days until Friday)
+      const fridayOfWeek = getFridayOfWeek(reportDate)
+      
+      // Extend the date range to include a few days after Friday for post-report calculation
+      const postReportEnd = addDays(fridayOfWeek, 0) // Use Friday as end
+
+      // Fetch price data for all needed ranges
+      // We need data from prevWeekStart to postReportEnd to cover all ranges
+      const priceData = await getHistoricalPriceData(symbol, prevWeekStart, postReportEnd, '1d')
+
+      if (priceData.length === 0) {
+        setPriceChangeData(prev => ({
+          ...prev,
+          [reportDate]: { previousWeek: null, currentWeekMTD: null, postReport: null, loading: false }
+        }))
+        return
+      }
+
+      // Helper to find price on or before a specific date
+      const findPriceOnOrBefore = (targetDate: string): number | null => {
+        const target = new Date(targetDate)
+        // Find the closest price on or before the target date
+        for (let i = priceData.length - 1; i >= 0; i--) {
+          const dataDate = new Date(priceData[i].date)
+          if (dataDate <= target) {
+            return priceData[i].close ?? null
+          }
+        }
+        return null
+      }
+
+      // Helper to find price on or after a specific date
+      const findPriceOnOrAfter = (targetDate: string): number | null => {
+        const target = new Date(targetDate)
+        for (let i = 0; i < priceData.length; i++) {
+          const dataDate = new Date(priceData[i].date)
+          if (dataDate >= target) {
+            return priceData[i].close ?? null
+          }
+        }
+        return null
+      }
+
+      // Helper to find the last price in the data (most recent)
+      const findLastPrice = (): number | null => {
+        if (priceData.length > 0) {
+          return priceData[priceData.length - 1].close ?? null
+        }
+        return null
+      }
+
+      // Get prices for calculations
+      const reportDatePrice = findPriceOnOrBefore(reportDate)
+      const prevWeekPrice = findPriceOnOrBefore(prevWeekStart)
+      const mondayPrice = findPriceOnOrBefore(mondayOfWeek)
+      const fridayPrice = findPriceOnOrBefore(fridayOfWeek)
+      // For post-report, use the most recent price available (could be after Friday)
+      const postReportPrice = findLastPrice()
+
+      // Calculate percentage and absolute changes
+      const calcChange = (from: number | null, to: number | null): { pct: number; abs: number } | null => {
+        if (from && to && from !== 0) {
+          return { pct: ((to - from) / from) * 100, abs: to - from }
+        }
+        return null
+      }
+
+      const previousWeekChange = calcChange(prevWeekPrice, reportDatePrice)
+      const currentWeekMTDChange = calcChange(mondayPrice, reportDatePrice)
+      const postReportChange = calcChange(reportDatePrice, postReportPrice)
+
+      setPriceChangeData(prev => ({
+        ...prev,
+        [reportDate]: {
+          previousWeek: previousWeekChange !== null ? {
+            from: formatDate(prevWeekStart),
+            to: formatDate(reportDate),
+            change: previousWeekChange.pct,
+            absChange: previousWeekChange.abs
+          } : null,
+          currentWeekMTD: currentWeekMTDChange !== null ? {
+            from: formatDate(mondayOfWeek),
+            to: formatDate(reportDate),
+            change: currentWeekMTDChange.pct,
+            absChange: currentWeekMTDChange.abs
+          } : null,
+          postReport: postReportChange !== null ? {
+            from: formatDate(reportDate),
+            to: formatDate(fridayOfWeek),
+            change: postReportChange.pct,
+            absChange: postReportChange.abs
+          } : null,
+          loading: false
+        }
+      }))
+    } catch (error) {
+      console.error('Error fetching price changes:', error)
+      setPriceChangeData(prev => ({
+        ...prev,
+        [reportDate]: { previousWeek: null, currentWeekMTD: null, postReport: null, loading: false }
+      }))
+    }
+  }, [priceChangeData])
+
+  // Effect to fetch price changes when latestData changes
+  useEffect(() => {
+    if (latestData?.report_date_as_yyyy_mm_dd) {
+      fetchPriceChanges(latestData.report_date_as_yyyy_mm_dd, commodity)
+    }
+  }, [latestData, commodity, fetchPriceChanges])
+
+  // Effect to fetch price changes when a historical card is expanded
+  useEffect(() => {
+    if (expandedCardIndex !== null && historicalData[expandedCardIndex]) {
+      const data = historicalData[expandedCardIndex]
+      if (data?.report_date_as_yyyy_mm_dd && !priceChangeData[data.report_date_as_yyyy_mm_dd]) {
+        fetchPriceChanges(data.report_date_as_yyyy_mm_dd, commodity)
+      }
+    }
+  }, [expandedCardIndex, historicalData, commodity, priceChangeData, fetchPriceChanges])
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
       <h2 className="text-xl font-semibold">View Data</h2>
@@ -500,22 +686,66 @@ export default function ViewDataSection() {
           <div className="border-t border-green-200 pt-3 mt-3">
             <div className="text-sm font-semibold mb-2">Key Metrics</div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-              {latestData.open_interest_all !== undefined && (
-                <div className="flex justify-between p-2 bg-white rounded border border-gray-200">
-                  <span className="text-gray-600 text-nowrap">Open Interest:</span>
-                  <span className="font-medium">
-                    {latestData.open_interest_all.toLocaleString()}
-                    {latestData.change_in_open_interest_all !== undefined && (
-                      <span className={`ml-1 ${(latestData.change_in_open_interest_all || 0) >= 0
-                          ? 'text-green-700'
-                          : 'text-red-700'
-                        }`}>
-                        ({(latestData.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{latestData.change_in_open_interest_all.toLocaleString()})
+              {latestData.open_interest_all !== undefined && (() => {
+                const reportDate = latestData.report_date_as_yyyy_mm_dd
+                const pcData = reportDate ? priceChangeData[reportDate] : undefined
+                const isLoading = pcData?.loading ?? false
+                return (
+                  <div className="p-2 bg-white rounded border border-gray-200 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap flex items-center">
+                        Open Interest:
+                        {isLoading && (
+                          <svg className="animate-spin ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        )}
                       </span>
+                      <span className="font-medium">
+                        {latestData.open_interest_all.toLocaleString()}
+                        {latestData.change_in_open_interest_all !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_open_interest_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{latestData.change_in_open_interest_all.toLocaleString()})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    {/* Price Change Metrics */}
+                    {!isLoading && pcData && (
+                      <div className="space-y-1 text-xs pt-1 border-t border-gray-100">
+                        {pcData.previousWeek && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 text-nowrap">Price ({pcData.previousWeek.from} - {pcData.previousWeek.to}):</span>
+                            <span className={`font-medium ${(pcData.previousWeek.change || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              {((pcData.previousWeek.absChange || 0) >= 0 ? '+' : '')}{pcData.previousWeek.absChange.toFixed(2)} ({((pcData.previousWeek.change || 0) >= 0 ? '+' : '')}{pcData.previousWeek.change.toFixed(2)}%)
+                            </span>
+                          </div>
+                        )}
+                        {pcData.currentWeekMTD && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 text-nowrap">Price ({pcData.currentWeekMTD.from} - {pcData.currentWeekMTD.to}):</span>
+                            <span className={`font-medium ${(pcData.currentWeekMTD.change || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              {((pcData.currentWeekMTD.absChange || 0) >= 0 ? '+' : '')}{pcData.currentWeekMTD.absChange.toFixed(2)} ({((pcData.currentWeekMTD.change || 0) >= 0 ? '+' : '')}{pcData.currentWeekMTD.change.toFixed(2)}%)
+                            </span>
+                          </div>
+                        )}
+                        {pcData.postReport && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 text-nowrap">Price ({pcData.postReport.from} - {pcData.postReport.to}):</span>
+                            <span className={`font-medium ${(pcData.postReport.change || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              {((pcData.postReport.absChange || 0) >= 0 ? '+' : '')}{pcData.postReport.absChange.toFixed(2)} ({((pcData.postReport.change || 0) >= 0 ? '+' : '')}{pcData.postReport.change.toFixed(2)}%)
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </span>
-                </div>
-              )}
+                  </div>
+                )
+              })()}
               {/* Prod/Merc Category */}
               <div className="border border-gray-200 rounded p-2 bg-white">
                 <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Producer/Merchant</div>
@@ -834,22 +1064,66 @@ export default function ViewDataSection() {
                         Key Metrics
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                        {data.open_interest_all !== undefined && (
-                          <div className="flex justify-between p-2 bg-white rounded border border-gray-200">
-                            <span className="text-gray-600 text-nowrap">Open Interest:</span>
-                            <span className="font-medium">
-                              {data.open_interest_all.toLocaleString()}
-                              {data.change_in_open_interest_all !== undefined && (
-                                <span className={`ml-1 ${(data.change_in_open_interest_all || 0) >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                  }`}>
-                                  ({(data.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{data.change_in_open_interest_all.toLocaleString()})
+                        {data.open_interest_all !== undefined && (() => {
+                          const reportDate = data.report_date_as_yyyy_mm_dd
+                          const pcData = reportDate ? priceChangeData[reportDate] : undefined
+                          const isLoading = pcData?.loading ?? false
+                          return (
+                            <div className="p-2 bg-white rounded border border-gray-200 space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap flex items-center">
+                                  Open Interest:
+                                  {isLoading && (
+                                    <svg className="animate-spin ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                  )}
                                 </span>
+                                <span className="font-medium">
+                                  {data.open_interest_all.toLocaleString()}
+                                  {data.change_in_open_interest_all !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_open_interest_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{data.change_in_open_interest_all.toLocaleString()})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                              {/* Price Change Metrics */}
+                              {!isLoading && pcData && (
+                                <div className="space-y-1 text-xs pt-1 border-t border-gray-100">
+                                  {pcData.previousWeek && (
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600 text-nowrap">Price ({pcData.previousWeek.from} - {pcData.previousWeek.to}):</span>
+                                      <span className={`font-medium ${(pcData.previousWeek.change || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {((pcData.previousWeek.absChange || 0) >= 0 ? '+' : '')}{pcData.previousWeek.absChange.toFixed(2)} ({((pcData.previousWeek.change || 0) >= 0 ? '+' : '')}{pcData.previousWeek.change.toFixed(2)}%)
+                                      </span>
+                                    </div>
+                                  )}
+                                  {pcData.currentWeekMTD && (
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600 text-nowrap">Price ({pcData.currentWeekMTD.from} - {pcData.currentWeekMTD.to}):</span>
+                                      <span className={`font-medium ${(pcData.currentWeekMTD.change || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {((pcData.currentWeekMTD.absChange || 0) >= 0 ? '+' : '')}{pcData.currentWeekMTD.absChange.toFixed(2)} ({((pcData.currentWeekMTD.change || 0) >= 0 ? '+' : '')}{pcData.currentWeekMTD.change.toFixed(2)}%)
+                                      </span>
+                                    </div>
+                                  )}
+                                  {pcData.postReport && (
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600 text-nowrap">Price ({pcData.postReport.from} - {pcData.postReport.to}):</span>
+                                      <span className={`font-medium ${(pcData.postReport.change || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {((pcData.postReport.absChange || 0) >= 0 ? '+' : '')}{pcData.postReport.absChange.toFixed(2)} ({((pcData.postReport.change || 0) >= 0 ? '+' : '')}{pcData.postReport.change.toFixed(2)}%)
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                               )}
-                            </span>
-                          </div>
-                        )}
+                            </div>
+                          )
+                        })()}
                         {/* Prod/Merc Category */}
                         <div className="border border-gray-200 rounded p-2 bg-white">
                           <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Producer/Merchant</div>
