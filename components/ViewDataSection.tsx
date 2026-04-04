@@ -499,10 +499,10 @@ export default function ViewDataSection() {
 
           <div className="border-t border-green-200 pt-3 mt-3">
             <div className="text-sm font-semibold mb-2">Key Metrics</div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
               {latestData.open_interest_all !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Open Interest:</span>
+                <div className="flex justify-between p-2 bg-white rounded border border-gray-200">
+                  <span className="text-gray-600 text-nowrap">Open Interest:</span>
                   <span className="font-medium">
                     {latestData.open_interest_all.toLocaleString()}
                     {latestData.change_in_open_interest_all !== undefined && (
@@ -516,102 +516,276 @@ export default function ViewDataSection() {
                   </span>
                 </div>
               )}
-              {latestData.prod_merc_positions_long !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Prod/Merc Long:</span>
-                  <span className="font-medium">
-                    {latestData.prod_merc_positions_long.toLocaleString()}
-                    {latestData.change_in_prod_merc_long !== undefined && (
-                      <span className={`ml-1 ${(latestData.change_in_prod_merc_long || 0) >= 0
-                          ? 'text-green-700'
-                          : 'text-red-700'
-                        }`}>
-                        ({(latestData.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{latestData.change_in_prod_merc_long.toLocaleString()})
+              {/* Prod/Merc Category */}
+              <div className="border border-gray-200 rounded p-2 bg-white">
+                <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Producer/Merchant</div>
+                <div className="space-y-1 text-sm">
+                  {latestData.prod_merc_positions_long !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="font-medium">
+                        {latestData.prod_merc_positions_long.toLocaleString()}
+                        {latestData.change_in_prod_merc_long !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_prod_merc_long || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{latestData.change_in_prod_merc_long.toLocaleString()})
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                </div>
-              )}
-              {latestData.prod_merc_positions_short !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Prod/Merc Short:</span>
-                  <span className="font-medium">
-                    {latestData.prod_merc_positions_short.toLocaleString()}
-                    {latestData.change_in_prod_merc_short !== undefined && (
-                      <span className={`ml-1 ${(latestData.change_in_prod_merc_short || 0) >= 0
-                          ? 'text-green-700'
-                          : 'text-red-700'
-                        }`}>
-                        ({(latestData.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{latestData.change_in_prod_merc_short.toLocaleString()})
+                    </div>
+                  )}
+                  {latestData.prod_merc_positions_short !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="font-medium">
+                        {latestData.prod_merc_positions_short.toLocaleString()}
+                        {latestData.change_in_prod_merc_short !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_prod_merc_short || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{latestData.change_in_prod_merc_short.toLocaleString()})
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                </div>
-              )}
-              {latestData.swap_positions_long_all !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Swap Long:</span>
-                  <span className="font-medium">
-                    {latestData.swap_positions_long_all.toLocaleString()}
-                    {latestData.change_in_swap_long_all !== undefined && (
-                      <span className={`ml-1 ${(latestData.change_in_swap_long_all || 0) >= 0
-                          ? 'text-green-700'
-                          : 'text-red-700'
-                        }`}>
-                        ({(latestData.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_swap_long_all.toLocaleString()})
+                    </div>
+                  )}
+                  {(latestData.prod_merc_positions_long !== undefined || latestData.prod_merc_positions_short !== undefined) && latestData.prod_merc_net !== undefined && (
+                    <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="font-medium">
+                        {latestData.prod_merc_net.toLocaleString()}
+                        {(() => {
+                          const change = (latestData.change_in_prod_merc_long || 0) - (latestData.change_in_prod_merc_short || 0);
+                          return change !== 0 && (
+                            <span className={`ml-1 ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                            </span>
+                          );
+                        })()}
                       </span>
-                    )}
-                  </span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {latestData.swap__positions_short_all !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Swap Short:</span>
-                  <span className="font-medium">
-                    {latestData.swap__positions_short_all.toLocaleString()}
-                    {latestData.change_in_swap_short_all !== undefined && (
-                      <span className={`ml-1 ${(latestData.change_in_swap_short_all || 0) >= 0
-                          ? 'text-green-700'
-                          : 'text-red-700'
-                        }`}>
-                        ({(latestData.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_swap_short_all.toLocaleString()})
+              </div>
+              {/* Swap Dealers Category */}
+              <div className="border border-gray-200 rounded p-2 bg-white">
+                <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Swap Dealers</div>
+                <div className="space-y-1 text-sm">
+                  {latestData.swap_positions_long_all !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="font-medium">
+                        {latestData.swap_positions_long_all.toLocaleString()}
+                        {latestData.change_in_swap_long_all !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_swap_long_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_swap_long_all.toLocaleString()})
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                </div>
-              )}
-              {latestData.m_money_positions_long_all !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">M Money Long:</span>
-                  <span className="font-medium">
-                    {latestData.m_money_positions_long_all.toLocaleString()}
-                    {latestData.change_in_m_money_long_all !== undefined && (
-                      <span className={`ml-1 ${(latestData.change_in_m_money_long_all || 0) >= 0
-                          ? 'text-green-700'
-                          : 'text-red-700'
-                        }`}>
-                        ({(latestData.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_m_money_long_all.toLocaleString()})
+                    </div>
+                  )}
+                  {latestData.swap__positions_short_all !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="font-medium">
+                        {latestData.swap__positions_short_all.toLocaleString()}
+                        {latestData.change_in_swap_short_all !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_swap_short_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_swap_short_all.toLocaleString()})
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                </div>
-              )}
-              {latestData.m_money_positions_short_all !== undefined && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">M Money Short:</span>
-                  <span className="font-medium">
-                    {latestData.m_money_positions_short_all.toLocaleString()}
-                    {latestData.change_in_m_money_short_all !== undefined && (
-                      <span className={`ml-1 ${(latestData.change_in_m_money_short_all || 0) >= 0
-                          ? 'text-green-700'
-                          : 'text-red-700'
-                        }`}>
-                        ({(latestData.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_m_money_short_all.toLocaleString()})
+                    </div>
+                  )}
+                  {(latestData.swap_positions_long_all !== undefined || latestData.swap__positions_short_all !== undefined) && latestData.swap_net !== undefined && (
+                    <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="font-medium">
+                        {latestData.swap_net.toLocaleString()}
+                        {(() => {
+                          const change = (latestData.change_in_swap_long_all || 0) - (latestData.change_in_swap_short_all || 0);
+                          return change !== 0 && (
+                            <span className={`ml-1 ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                            </span>
+                          );
+                        })()}
                       </span>
-                    )}
-                  </span>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+              {/* Managed Money Category */}
+              <div className="border border-gray-200 rounded p-2 bg-white">
+                <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Managed Money</div>
+                <div className="space-y-1 text-sm">
+                  {latestData.m_money_positions_long_all !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="font-medium">
+                        {latestData.m_money_positions_long_all.toLocaleString()}
+                        {latestData.change_in_m_money_long_all !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_m_money_long_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_m_money_long_all.toLocaleString()})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {latestData.m_money_positions_short_all !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="font-medium">
+                        {latestData.m_money_positions_short_all.toLocaleString()}
+                        {latestData.change_in_m_money_short_all !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_m_money_short_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_m_money_short_all.toLocaleString()})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {(latestData.m_money_positions_long_all !== undefined || latestData.m_money_positions_short_all !== undefined) && latestData.m_money_net !== undefined && (
+                    <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="font-medium">
+                        {latestData.m_money_net.toLocaleString()}
+                        {(() => {
+                          const change = (latestData.change_in_m_money_long_all || 0) - (latestData.change_in_m_money_short_all || 0);
+                          return change !== 0 && (
+                            <span className={`ml-1 ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                            </span>
+                          );
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Other Reportables Category */}
+              <div className="border border-gray-200 rounded p-2 bg-white">
+                <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Other Reportables</div>
+                <div className="space-y-1 text-sm">
+                  {latestData.other_rept_positions_long !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="font-medium">
+                        {latestData.other_rept_positions_long.toLocaleString()}
+                        {latestData.change_in_other_rept_long !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_other_rept_long || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_other_rept_long || 0) >= 0 ? '+' : ''}{latestData.change_in_other_rept_long.toLocaleString()})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {latestData.other_rept_positions_short !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="font-medium">
+                        {latestData.other_rept_positions_short.toLocaleString()}
+                        {latestData.change_in_other_rept_short !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_other_rept_short || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_other_rept_short || 0) >= 0 ? '+' : ''}{latestData.change_in_other_rept_short.toLocaleString()})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {(latestData.other_rept_positions_long !== undefined || latestData.other_rept_positions_short !== undefined) && latestData.other_rept_net !== undefined && (
+                    <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="font-medium">
+                        {latestData.other_rept_net.toLocaleString()}
+                        {(() => {
+                          const change = (latestData.change_in_other_rept_long || 0) - (latestData.change_in_other_rept_short || 0);
+                          return change !== 0 && (
+                            <span className={`ml-1 ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                            </span>
+                          );
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Non Reportables Category */}
+              <div className="border border-gray-200 rounded p-2 bg-white">
+                <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Non Reportables</div>
+                <div className="space-y-1 text-sm">
+                  {latestData.nonrept_positions_long_all !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="font-medium">
+                        {latestData.nonrept_positions_long_all.toLocaleString()}
+                        {latestData.change_in_nonrept_long_all !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_nonrept_long_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_nonrept_long_all || 0) >= 0 ? '+' : ''}{latestData.change_in_nonrept_long_all.toLocaleString()})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {latestData.nonrept_positions_short_all !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="font-medium">
+                        {latestData.nonrept_positions_short_all.toLocaleString()}
+                        {latestData.change_in_nonrept_short_all !== undefined && (
+                          <span className={`ml-1 ${(latestData.change_in_nonrept_short_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            ({(latestData.change_in_nonrept_short_all || 0) >= 0 ? '+' : ''}{latestData.change_in_nonrept_short_all.toLocaleString()})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {(latestData.nonrept_positions_long_all !== undefined || latestData.nonrept_positions_short_all !== undefined) && latestData.nonrept_net !== undefined && (
+                    <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="font-medium">
+                        {latestData.nonrept_net.toLocaleString()}
+                        {(() => {
+                          const change = (latestData.change_in_nonrept_long_all || 0) - (latestData.change_in_nonrept_short_all || 0);
+                          return change !== 0 && (
+                            <span className={`ml-1 ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                            </span>
+                          );
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -655,14 +829,14 @@ export default function ViewDataSection() {
 
                   {/* Expandable Content */}
                   {isExpanded && (
-                    <div className="px-3 pb-3 pt-2 border-t border-gray-200 space-y-2">
+                    <div className="px-3 pb-3 pt-2 border-t border-gray-200 space-y-3">
                       <div className="text-xs font-semibold text-gray-700 mb-2">
                         Key Metrics
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                         {data.open_interest_all !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Open Interest:</span>
+                          <div className="flex justify-between p-2 bg-white rounded border border-gray-200">
+                            <span className="text-gray-600 text-nowrap">Open Interest:</span>
                             <span className="font-medium">
                               {data.open_interest_all.toLocaleString()}
                               {data.change_in_open_interest_all !== undefined && (
@@ -676,102 +850,276 @@ export default function ViewDataSection() {
                             </span>
                           </div>
                         )}
-                        {data.prod_merc_positions_long !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Prod/Merc Long:</span>
-                            <span className="font-medium">
-                              {data.prod_merc_positions_long.toLocaleString()}
-                              {data.change_in_prod_merc_long !== undefined && (
-                                <span className={`ml-1 ${(data.change_in_prod_merc_long || 0) >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                  }`}>
-                                  ({(data.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{data.change_in_prod_merc_long.toLocaleString()})
+                        {/* Prod/Merc Category */}
+                        <div className="border border-gray-200 rounded p-2 bg-white">
+                          <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Producer/Merchant</div>
+                          <div className="space-y-1 text-sm">
+                            {data.prod_merc_positions_long !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="font-medium">
+                                  {data.prod_merc_positions_long.toLocaleString()}
+                                  {data.change_in_prod_merc_long !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_prod_merc_long || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{data.change_in_prod_merc_long.toLocaleString()})
+                                    </span>
+                                  )}
                                 </span>
-                              )}
-                            </span>
-                          </div>
-                        )}
-                        {data.prod_merc_positions_short !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Prod/Merc Short:</span>
-                            <span className="font-medium">
-                              {data.prod_merc_positions_short.toLocaleString()}
-                              {data.change_in_prod_merc_short !== undefined && (
-                                <span className={`ml-1 ${(data.change_in_prod_merc_short || 0) >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                  }`}>
-                                  ({(data.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{data.change_in_prod_merc_short.toLocaleString()})
+                              </div>
+                            )}
+                            {data.prod_merc_positions_short !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="font-medium">
+                                  {data.prod_merc_positions_short.toLocaleString()}
+                                  {data.change_in_prod_merc_short !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_prod_merc_short || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{data.change_in_prod_merc_short.toLocaleString()})
+                                    </span>
+                                  )}
                                 </span>
-                              )}
-                            </span>
-                          </div>
-                        )}
-                        {data.swap_positions_long_all !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Swap Long:</span>
-                            <span className="font-medium">
-                              {data.swap_positions_long_all.toLocaleString()}
-                              {data.change_in_swap_long_all !== undefined && (
-                                <span className={`ml-1 ${(data.change_in_swap_long_all || 0) >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                  }`}>
-                                  ({(data.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{data.change_in_swap_long_all.toLocaleString()})
+                              </div>
+                            )}
+                            {(data.prod_merc_positions_long !== undefined || data.prod_merc_positions_short !== undefined) && data.prod_merc_net !== undefined && (
+                              <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="font-medium">
+                                  {data.prod_merc_net.toLocaleString()}
+                                  {(() => {
+                                    const change = (data.change_in_prod_merc_long || 0) - (data.change_in_prod_merc_short || 0);
+                                    return change !== 0 && (
+                                      <span className={`ml-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                                      </span>
+                                    );
+                                  })()}
                                 </span>
-                              )}
-                            </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {data.swap__positions_short_all !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Swap Short:</span>
-                            <span className="font-medium">
-                              {data.swap__positions_short_all.toLocaleString()}
-                              {data.change_in_swap_short_all !== undefined && (
-                                <span className={`ml-1 ${(data.change_in_swap_short_all || 0) >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                  }`}>
-                                  ({(data.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{data.change_in_swap_short_all.toLocaleString()})
+                        </div>
+                        {/* Swap Dealers Category */}
+                        <div className="border border-gray-200 rounded p-2 bg-white">
+                          <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Swap Dealers</div>
+                          <div className="space-y-1 text-sm">
+                            {data.swap_positions_long_all !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="font-medium">
+                                  {data.swap_positions_long_all.toLocaleString()}
+                                  {data.change_in_swap_long_all !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_swap_long_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{data.change_in_swap_long_all.toLocaleString()})
+                                    </span>
+                                  )}
                                 </span>
-                              )}
-                            </span>
-                          </div>
-                        )}
-                        {data.m_money_positions_long_all !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">M Money Long:</span>
-                            <span className="font-medium">
-                              {data.m_money_positions_long_all.toLocaleString()}
-                              {data.change_in_m_money_long_all !== undefined && (
-                                <span className={`ml-1 ${(data.change_in_m_money_long_all || 0) >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                  }`}>
-                                  ({(data.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{data.change_in_m_money_long_all.toLocaleString()})
+                              </div>
+                            )}
+                            {data.swap__positions_short_all !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="font-medium">
+                                  {data.swap__positions_short_all.toLocaleString()}
+                                  {data.change_in_swap_short_all !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_swap_short_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{data.change_in_swap_short_all.toLocaleString()})
+                                    </span>
+                                  )}
                                 </span>
-                              )}
-                            </span>
-                          </div>
-                        )}
-                        {data.m_money_positions_short_all !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">M Money Short:</span>
-                            <span className="font-medium">
-                              {data.m_money_positions_short_all.toLocaleString()}
-                              {data.change_in_m_money_short_all !== undefined && (
-                                <span className={`ml-1 ${(data.change_in_m_money_short_all || 0) >= 0
-                                    ? 'text-green-600'
-                                    : 'text-red-600'
-                                  }`}>
-                                  ({(data.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{data.change_in_m_money_short_all.toLocaleString()})
+                              </div>
+                            )}
+                            {(data.swap_positions_long_all !== undefined || data.swap__positions_short_all !== undefined) && data.swap_net !== undefined && (
+                              <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="font-medium">
+                                  {data.swap_net.toLocaleString()}
+                                  {(() => {
+                                    const change = (data.change_in_swap_long_all || 0) - (data.change_in_swap_short_all || 0);
+                                    return change !== 0 && (
+                                      <span className={`ml-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                                      </span>
+                                    );
+                                  })()}
                                 </span>
-                              )}
-                            </span>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
+                        {/* Managed Money Category */}
+                        <div className="border border-gray-200 rounded p-2 bg-white">
+                          <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Managed Money</div>
+                          <div className="space-y-1 text-sm">
+                            {data.m_money_positions_long_all !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="font-medium">
+                                  {data.m_money_positions_long_all.toLocaleString()}
+                                  {data.change_in_m_money_long_all !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_m_money_long_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{data.change_in_m_money_long_all.toLocaleString()})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {data.m_money_positions_short_all !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="font-medium">
+                                  {data.m_money_positions_short_all.toLocaleString()}
+                                  {data.change_in_m_money_short_all !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_m_money_short_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{data.change_in_m_money_short_all.toLocaleString()})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {(data.m_money_positions_long_all !== undefined || data.m_money_positions_short_all !== undefined) && data.m_money_net !== undefined && (
+                              <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="font-medium">
+                                  {data.m_money_net.toLocaleString()}
+                                  {(() => {
+                                    const change = (data.change_in_m_money_long_all || 0) - (data.change_in_m_money_short_all || 0);
+                                    return change !== 0 && (
+                                      <span className={`ml-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                                      </span>
+                                    );
+                                  })()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {/* Other Reportables Category */}
+                        <div className="border border-gray-200 rounded p-2 bg-white">
+                          <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Other Reportables</div>
+                          <div className="space-y-1 text-sm">
+                            {data.other_rept_positions_long !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="font-medium">
+                                  {data.other_rept_positions_long.toLocaleString()}
+                                  {data.change_in_other_rept_long !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_other_rept_long || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_other_rept_long || 0) >= 0 ? '+' : ''}{data.change_in_other_rept_long.toLocaleString()})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {data.other_rept_positions_short !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="font-medium">
+                                  {data.other_rept_positions_short.toLocaleString()}
+                                  {data.change_in_other_rept_short !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_other_rept_short || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_other_rept_short || 0) >= 0 ? '+' : ''}{data.change_in_other_rept_short.toLocaleString()})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {(data.other_rept_positions_long !== undefined || data.other_rept_positions_short !== undefined) && data.other_rept_net !== undefined && (
+                              <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="font-medium">
+                                  {data.other_rept_net.toLocaleString()}
+                                  {(() => {
+                                    const change = (data.change_in_other_rept_long || 0) - (data.change_in_other_rept_short || 0);
+                                    return change !== 0 && (
+                                      <span className={`ml-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                                      </span>
+                                    );
+                                  })()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {/* Non Reportables Category */}
+                        <div className="border border-gray-200 rounded p-2 bg-white">
+                          <div className="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-100">Non Reportables</div>
+                          <div className="space-y-1 text-sm">
+                            {data.nonrept_positions_long_all !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="font-medium">
+                                  {data.nonrept_positions_long_all.toLocaleString()}
+                                  {data.change_in_nonrept_long_all !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_nonrept_long_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_nonrept_long_all || 0) >= 0 ? '+' : ''}{data.change_in_nonrept_long_all.toLocaleString()})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {data.nonrept_positions_short_all !== undefined && (
+                              <div className="flex justify-between">
+                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="font-medium">
+                                  {data.nonrept_positions_short_all.toLocaleString()}
+                                  {data.change_in_nonrept_short_all !== undefined && (
+                                    <span className={`ml-1 ${(data.change_in_nonrept_short_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      ({(data.change_in_nonrept_short_all || 0) >= 0 ? '+' : ''}{data.change_in_nonrept_short_all.toLocaleString()})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {(data.nonrept_positions_long_all !== undefined || data.nonrept_positions_short_all !== undefined) && data.nonrept_net !== undefined && (
+                              <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
+                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="font-medium">
+                                  {data.nonrept_net.toLocaleString()}
+                                  {(() => {
+                                    const change = (data.change_in_nonrept_long_all || 0) - (data.change_in_nonrept_short_all || 0);
+                                    return change !== 0 && (
+                                      <span className={`ml-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        ({change >= 0 ? '+' : ''}{change.toLocaleString()})
+                                      </span>
+                                    );
+                                  })()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
