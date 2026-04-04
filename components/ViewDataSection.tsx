@@ -483,8 +483,9 @@ export default function ViewDataSection() {
       // 3. Post Report: From report date to end of week Friday (report date + days until Friday)
       const fridayOfWeek = getFridayOfWeek(reportDate)
       
-      // Extend the date range to include a few days after Friday for post-report calculation
-      const postReportEnd = addDays(fridayOfWeek, 0) // Use Friday as end
+      // Extend the date range to include a few days after Friday to ensure we get Friday's close
+      // The API might not have data for the exact Friday if it's a holiday
+      const postReportEnd = addDays(fridayOfWeek, 3) // Add 3 extra days to ensure we get Friday's data
 
       // Fetch price data for all needed ranges
       // We need data from prevWeekStart to postReportEnd to cover all ranges
@@ -534,10 +535,12 @@ export default function ViewDataSection() {
       // Get prices for calculations
       const reportDatePrice = findPriceOnOrBefore(reportDate)
       const prevWeekPrice = findPriceOnOrBefore(prevWeekStart)
-      const mondayPrice = findPriceOnOrBefore(mondayOfWeek)
-      const fridayPrice = findPriceOnOrBefore(fridayOfWeek)
-      // For post-report, use the most recent price available (could be after Friday)
-      const postReportPrice = findLastPrice()
+      // For current week MTD: Use Friday's close price (previous week's Friday before the report date)
+      // If Friday is a holiday, it will use the previous trading day (Thursday)
+      const previousFridayPrice = findPriceOnOrBefore(addDays(mondayOfWeek, -3)) // Friday before Monday of current week
+      // For post-report: Use Friday of the same week as report date (end of week close)
+      // If Friday is a holiday, it will use the previous trading day
+      const postReportPrice = findPriceOnOrBefore(fridayOfWeek)
 
       // Calculate percentage and absolute changes
       const calcChange = (from: number | null, to: number | null): { pct: number; abs: number } | null => {
@@ -548,7 +551,8 @@ export default function ViewDataSection() {
       }
 
       const previousWeekChange = calcChange(prevWeekPrice, reportDatePrice)
-      const currentWeekMTDChange = calcChange(mondayPrice, reportDatePrice)
+      // Current week MTD: From previous Friday close to report date (labeled as Monday to report date)
+      const currentWeekMTDChange = calcChange(previousFridayPrice, reportDatePrice)
       const postReportChange = calcChange(reportDatePrice, postReportPrice)
 
       setPriceChangeData(prev => ({
@@ -561,6 +565,7 @@ export default function ViewDataSection() {
             absChange: previousWeekChange.abs
           } : null,
           currentWeekMTD: currentWeekMTDChange !== null ? {
+            // Label shows Monday date, but uses Friday's close price
             from: formatDate(mondayOfWeek),
             to: formatDate(reportDate),
             change: currentWeekMTDChange.pct,
@@ -590,6 +595,11 @@ export default function ViewDataSection() {
       fetchPriceChanges(latestData.report_date_as_yyyy_mm_dd, commodity)
     }
   }, [latestData, commodity, fetchPriceChanges])
+
+  // Effect to clear price change data when commodity changes
+  useEffect(() => {
+    setPriceChangeData({})
+  }, [commodity])
 
   // Effect to fetch price changes when a historical card is expanded
   useEffect(() => {
