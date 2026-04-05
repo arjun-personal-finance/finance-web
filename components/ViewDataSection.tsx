@@ -128,6 +128,14 @@ const formatDate = (dateStr: string): string => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+// Helper function to format date as MMM DD(Day) - for Daily Lens
+const formatDailyLensDate = (dateStr: string): string => {
+  const date = new Date(dateStr)
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const dayName = dayNames[date.getDay()]
+  return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}(${dayName})`
+}
+
 // Helper function to add/subtract days from a date
 const addDays = (dateStr: string, days: number): string => {
   const date = new Date(dateStr)
@@ -199,7 +207,80 @@ export default function ViewDataSection() {
     loading: boolean;
   }>>({})
 
+  // Daily Lens state - tracks which report date has Daily Lens expanded
+  const [expandedDailyLensDate, setExpandedDailyLensDate] = useState<string | null>(null)
+  // Daily Lens data - keyed by report date
+  const [dailyLensData, setDailyLensData] = useState<Record<string, { date: string; absChange: number; pctChange: number; volume: number | null }[]>>({})
+  // Daily Lens loading state
+  const [dailyLensLoading, setDailyLensLoading] = useState<Record<string, boolean>>({})
 
+  // Function to fetch and calculate Daily Lens data
+  const fetchDailyLensData = useCallback(async (reportDate: string, commodityName: string) => {
+    // Toggle collapse if already expanded
+    if (expandedDailyLensDate === reportDate) {
+      setExpandedDailyLensDate(null)
+      return
+    }
+
+    // Check if we already have data for this date
+    if (dailyLensData[reportDate]) {
+      setExpandedDailyLensDate(reportDate)
+      return
+    }
+
+    // Set loading state
+    setDailyLensLoading(prev => ({ ...prev, [reportDate]: true }))
+
+    try {
+      const symbol = getCommoditySymbol(commodityName)
+      // Report date is typically a Tuesday
+      const reportDateObj = new Date(reportDate)
+      
+      // Calculate start date: Previous week Wednesday (7 days before report date to ensure we get Wednesday data)
+      // We go back 7 days to ensure we have data for the day before Wednesday for calculating Wednesday's change
+      const startDate = addDays(reportDate, -7)
+      
+      // Calculate end date: Current week Friday (4 days after Tuesday report date to ensure we get Friday data)
+      const endDate = addDays(reportDate, 4)
+      
+      // Fetch price data from previous week Wednesday to current week Friday
+      const priceData = await getHistoricalPriceData(symbol, startDate, endDate, '1d')
+
+      if (priceData.length === 0) {
+        setDailyLensLoading(prev => ({ ...prev, [reportDate]: false }))
+        return
+      }
+
+      // Calculate daily changes for each trading day
+      // Each day's change = that day's close vs previous trading day's close
+      const dailyChanges: { date: string; absChange: number; pctChange: number; volume: number | null }[] = []
+
+      for (let i = 1; i < priceData.length; i++) {
+        const prevDay = priceData[i - 1]
+        const currDay = priceData[i]
+        const prevClose = prevDay.close
+        const currClose = currDay.close
+
+        if (prevClose && currClose && prevClose !== 0) {
+          const absChange = currClose - prevClose
+          const pctChange = (absChange / prevClose) * 100
+          dailyChanges.push({
+            date: currDay.date,
+            absChange,
+            pctChange,
+            volume: currDay.volume || null
+          })
+        }
+      }
+
+      setDailyLensData(prev => ({ ...prev, [reportDate]: dailyChanges }))
+      setExpandedDailyLensDate(reportDate)
+    } catch (error) {
+      console.error('Error fetching Daily Lens data:', error)
+    } finally {
+      setDailyLensLoading(prev => ({ ...prev, [reportDate]: false }))
+    }
+  }, [dailyLensData, expandedDailyLensDate])
 
   const loadData = async () => {
     setIsLoading(true)
@@ -554,11 +635,17 @@ export default function ViewDataSection() {
       const currentWeekMTDChange = calcChange(previousFridayPrice, reportDatePrice)
       const postReportChange = calcChange(reportDatePrice, postReportPrice)
 
+      // Calculate display dates for labels
+      // previousWeek: Price change from Tuesday to Tuesday represents Wed-Tue changes
+      const previousWeekFrom = addDays(prevWeekStart, 1) // Wednesday
+      // postReport: Price change from Tuesday to Friday represents Wed-Fri changes
+      const postReportFrom = addDays(reportDate, 1) // Wednesday
+
       setPriceChangeData(prev => ({
         ...prev,
         [reportDate]: {
           previousWeek: previousWeekChange !== null ? {
-            from: formatDate(prevWeekStart),
+            from: formatDate(previousWeekFrom),
             to: formatDate(reportDate),
             change: previousWeekChange.pct,
             absChange: previousWeekChange.abs
@@ -571,7 +658,7 @@ export default function ViewDataSection() {
             absChange: currentWeekMTDChange.abs
           } : null,
           postReport: postReportChange !== null ? {
-            from: formatDate(reportDate),
+            from: formatDate(postReportFrom),
             to: formatDate(fridayOfWeek),
             change: postReportChange.pct,
             absChange: postReportChange.abs
@@ -758,6 +845,45 @@ export default function ViewDataSection() {
                             </span>
                           </div>
                         )}
+                        {/* Daily Lens Row */}
+                        <div className="pt-1 border-t border-gray-100 mt-1">
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (reportDate) fetchDailyLensData(reportDate, commodity)
+                            }}
+                            className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-1 rounded"
+                          >
+                            <span className="text-gray-600 font-semibold text-nowrap">Daily Lens:</span>
+                            <span className="text-gray-400 text-xs">
+                              {expandedDailyLensDate === reportDate ? '▲' : '▶'}
+                            </span>
+                          </div>
+                          {/* Daily Lens Popup */}
+                          {expandedDailyLensDate === reportDate && (
+                            <div className="mt-1 ml-2 space-y-1">
+                              {dailyLensLoading[reportDate] ? (
+                                <div className="text-xs text-gray-500 py-1">Loading...</div>
+                              ) : dailyLensData[reportDate] ? (
+                                dailyLensData[reportDate].map((day, idx) => (
+                                  <div key={idx} className="text-xs flex justify-between items-center">
+                                    <span className="text-gray-600">{formatDailyLensDate(day.date)}:</span>
+                                    <span className={`font-medium ${(day.absChange || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                      {((day.absChange || 0) >= 0 ? '+' : '')}{day.absChange.toFixed(2)} ({(day.pctChange || 0) >= 0 ? '+' : ''}{day.pctChange.toFixed(2)}%)
+                                    </span>
+                                    {day.volume !== null && (
+                                      <span className="text-gray-500 text-xs ml-2">
+                                        Vol: {day.volume.toLocaleString()}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-xs text-gray-500 py-1">No data available</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1294,6 +1420,45 @@ export default function ViewDataSection() {
                                       </span>
                                     </div>
                                   )}
+                                  {/* Daily Lens Row */}
+                                  <div className="pt-1 border-t border-gray-100 mt-1">
+                                    <div
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (reportDate) fetchDailyLensData(reportDate, commodity)
+                                      }}
+                                      className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-1 rounded"
+                                    >
+                                      <span className="text-gray-600 font-semibold text-nowrap">Daily Lens:</span>
+                                      <span className="text-gray-400 text-xs">
+                                        {expandedDailyLensDate === reportDate ? '▲' : '▶'}
+                                      </span>
+                                    </div>
+                                    {/* Daily Lens Popup */}
+                                    {expandedDailyLensDate === reportDate && (
+                                      <div className="mt-1 ml-2 space-y-1">
+                                        {dailyLensLoading[reportDate] ? (
+                                          <div className="text-xs text-gray-500 py-1">Loading...</div>
+                                        ) : dailyLensData[reportDate] ? (
+                                          dailyLensData[reportDate].map((day, idx) => (
+                                            <div key={idx} className="text-xs flex justify-between items-center">
+                                              <span className="text-gray-600">{formatDailyLensDate(day.date)}:</span>
+                                              <span className={`font-medium ${(day.absChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                {((day.absChange || 0) >= 0 ? '+' : '')}{day.absChange.toFixed(2)} ({(day.pctChange || 0) >= 0 ? '+' : ''}{day.pctChange.toFixed(2)}%)
+                                              </span>
+                                              {day.volume !== null && (
+                                                <span className="text-gray-500 text-xs ml-2">
+                                                  Vol: {day.volume.toLocaleString()}
+                                                </span>
+                                              )}
+                                            </div>
+                                          ))
+                                        ) : (
+                                          <div className="text-xs text-gray-500 py-1">No data available</div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
