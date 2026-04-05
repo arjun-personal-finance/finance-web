@@ -490,7 +490,6 @@ export default function ViewDataSection() {
       // Fetch price data for all needed ranges
       // We need data from prevWeekStart to postReportEnd to cover all ranges
       const priceData = await getHistoricalPriceData(symbol, prevWeekStart, postReportEnd, '1d')
-
       if (priceData.length === 0) {
         setPriceChangeData(prev => ({
           ...prev,
@@ -704,7 +703,15 @@ export default function ViewDataSection() {
                   <div className="p-2 bg-white rounded border border-gray-200 space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600 text-nowrap flex items-center">
-                        Open Interest:
+                        <span className="font-semibold">Open Interest:</span>
+                        {latestData.change_in_open_interest_all !== undefined && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs font-semibold ${(latestData.change_in_open_interest_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{((latestData.change_in_open_interest_all / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
                         {isLoading && (
                           <svg className="animate-spin ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -762,7 +769,17 @@ export default function ViewDataSection() {
                 <div className="space-y-1 text-sm">
                   {latestData.prod_merc_positions_long !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Long:
+                        {latestData.change_in_prod_merc_long !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_prod_merc_long || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{((latestData.change_in_prod_merc_long / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.prod_merc_positions_long.toLocaleString()}
                         {latestData.change_in_prod_merc_long !== undefined && (
@@ -778,7 +795,17 @@ export default function ViewDataSection() {
                   )}
                   {latestData.prod_merc_positions_short !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Short:
+                        {latestData.change_in_prod_merc_short !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_prod_merc_short || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{((latestData.change_in_prod_merc_short / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.prod_merc_positions_short.toLocaleString()}
                         {latestData.change_in_prod_merc_short !== undefined && (
@@ -794,7 +821,17 @@ export default function ViewDataSection() {
                   )}
                   {(latestData.prod_merc_positions_long !== undefined || latestData.prod_merc_positions_short !== undefined) && latestData.prod_merc_net !== undefined && (
                     <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="text-gray-600 font-semibold text-nowrap">
+                        Net:
+                        {(() => {
+                          const change = (latestData.change_in_prod_merc_long || 0) - (latestData.change_in_prod_merc_short || 0);
+                          return change !== 0 && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                            <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              {change >= 0 ? '+' : ''}{((change / latestData.open_interest_all) * 100).toFixed(2)}%
+                            </span>
+                          );
+                        })()}
+                      </span>
                       <span className="font-medium">
                         {latestData.prod_merc_net.toLocaleString()}
                         {(() => {
@@ -816,7 +853,17 @@ export default function ViewDataSection() {
                 <div className="space-y-1 text-sm">
                   {latestData.swap_positions_long_all !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Long:
+                        {latestData.change_in_swap_long_all !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_swap_long_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{((latestData.change_in_swap_long_all / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.swap_positions_long_all.toLocaleString()}
                         {latestData.change_in_swap_long_all !== undefined && (
@@ -832,7 +879,17 @@ export default function ViewDataSection() {
                   )}
                   {latestData.swap__positions_short_all !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Short:
+                        {latestData.change_in_swap_short_all !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_swap_short_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{((latestData.change_in_swap_short_all / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.swap__positions_short_all.toLocaleString()}
                         {latestData.change_in_swap_short_all !== undefined && (
@@ -848,7 +905,17 @@ export default function ViewDataSection() {
                   )}
                   {(latestData.swap_positions_long_all !== undefined || latestData.swap__positions_short_all !== undefined) && latestData.swap_net !== undefined && (
                     <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="text-gray-600 font-semibold text-nowrap">
+                        Net:
+                        {(() => {
+                          const change = (latestData.change_in_swap_long_all || 0) - (latestData.change_in_swap_short_all || 0);
+                          return change !== 0 && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                            <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              {change >= 0 ? '+' : ''}{((change / latestData.open_interest_all) * 100).toFixed(2)}%
+                            </span>
+                          );
+                        })()}
+                      </span>
                       <span className="font-medium">
                         {latestData.swap_net.toLocaleString()}
                         {(() => {
@@ -870,7 +937,17 @@ export default function ViewDataSection() {
                 <div className="space-y-1 text-sm">
                   {latestData.m_money_positions_long_all !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Long:
+                        {latestData.change_in_m_money_long_all !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_m_money_long_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{((latestData.change_in_m_money_long_all / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.m_money_positions_long_all.toLocaleString()}
                         {latestData.change_in_m_money_long_all !== undefined && (
@@ -886,7 +963,17 @@ export default function ViewDataSection() {
                   )}
                   {latestData.m_money_positions_short_all !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Short:
+                        {latestData.change_in_m_money_short_all !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_m_money_short_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{((latestData.change_in_m_money_short_all / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.m_money_positions_short_all.toLocaleString()}
                         {latestData.change_in_m_money_short_all !== undefined && (
@@ -902,7 +989,17 @@ export default function ViewDataSection() {
                   )}
                   {(latestData.m_money_positions_long_all !== undefined || latestData.m_money_positions_short_all !== undefined) && latestData.m_money_net !== undefined && (
                     <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="text-gray-600 font-semibold text-nowrap">
+                        Net:
+                        {(() => {
+                          const change = (latestData.change_in_m_money_long_all || 0) - (latestData.change_in_m_money_short_all || 0);
+                          return change !== 0 && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                            <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              {change >= 0 ? '+' : ''}{((change / latestData.open_interest_all) * 100).toFixed(2)}%
+                            </span>
+                          );
+                        })()}
+                      </span>
                       <span className="font-medium">
                         {latestData.m_money_net.toLocaleString()}
                         {(() => {
@@ -924,7 +1021,17 @@ export default function ViewDataSection() {
                 <div className="space-y-1 text-sm">
                   {latestData.other_rept_positions_long !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Long:
+                        {latestData.change_in_other_rept_long !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_other_rept_long || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_other_rept_long || 0) >= 0 ? '+' : ''}{((latestData.change_in_other_rept_long / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.other_rept_positions_long.toLocaleString()}
                         {latestData.change_in_other_rept_long !== undefined && (
@@ -940,7 +1047,17 @@ export default function ViewDataSection() {
                   )}
                   {latestData.other_rept_positions_short !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Short:
+                        {latestData.change_in_other_rept_short !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_other_rept_short || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_other_rept_short || 0) >= 0 ? '+' : ''}{((latestData.change_in_other_rept_short / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.other_rept_positions_short.toLocaleString()}
                         {latestData.change_in_other_rept_short !== undefined && (
@@ -956,7 +1073,17 @@ export default function ViewDataSection() {
                   )}
                   {(latestData.other_rept_positions_long !== undefined || latestData.other_rept_positions_short !== undefined) && latestData.other_rept_net !== undefined && (
                     <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="text-gray-600 font-semibold text-nowrap">
+                        Net:
+                        {(() => {
+                          const change = (latestData.change_in_other_rept_long || 0) - (latestData.change_in_other_rept_short || 0);
+                          return change !== 0 && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                            <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              {change >= 0 ? '+' : ''}{((change / latestData.open_interest_all) * 100).toFixed(2)}%
+                            </span>
+                          );
+                        })()}
+                      </span>
                       <span className="font-medium">
                         {latestData.other_rept_net.toLocaleString()}
                         {(() => {
@@ -978,7 +1105,17 @@ export default function ViewDataSection() {
                 <div className="space-y-1 text-sm">
                   {latestData.nonrept_positions_long_all !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Long:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Long:
+                        {latestData.change_in_nonrept_long_all !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_nonrept_long_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_nonrept_long_all || 0) >= 0 ? '+' : ''}{((latestData.change_in_nonrept_long_all / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.nonrept_positions_long_all.toLocaleString()}
                         {latestData.change_in_nonrept_long_all !== undefined && (
@@ -994,7 +1131,17 @@ export default function ViewDataSection() {
                   )}
                   {latestData.nonrept_positions_short_all !== undefined && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 text-nowrap">Short:</span>
+                      <span className="text-gray-600 text-nowrap">
+                        Short:
+                        {latestData.change_in_nonrept_short_all !== undefined && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs ${(latestData.change_in_nonrept_short_all || 0) >= 0
+                              ? 'text-green-700'
+                              : 'text-red-700'
+                            }`}>
+                            {(latestData.change_in_nonrept_short_all || 0) >= 0 ? '+' : ''}{((latestData.change_in_nonrept_short_all / latestData.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                      </span>
                       <span className="font-medium">
                         {latestData.nonrept_positions_short_all.toLocaleString()}
                         {latestData.change_in_nonrept_short_all !== undefined && (
@@ -1010,7 +1157,17 @@ export default function ViewDataSection() {
                   )}
                   {(latestData.nonrept_positions_long_all !== undefined || latestData.nonrept_positions_short_all !== undefined) && latestData.nonrept_net !== undefined && (
                     <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                      <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                      <span className="text-gray-600 font-semibold text-nowrap">
+                        Net:
+                        {(() => {
+                          const change = (latestData.change_in_nonrept_long_all || 0) - (latestData.change_in_nonrept_short_all || 0);
+                          return change !== 0 && latestData.open_interest_all && latestData.open_interest_all !== 0 && (
+                            <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              {change >= 0 ? '+' : ''}{((change / latestData.open_interest_all) * 100).toFixed(2)}%
+                            </span>
+                          );
+                        })()}
+                      </span>
                       <span className="font-medium">
                         {latestData.nonrept_net.toLocaleString()}
                         {(() => {
@@ -1080,10 +1237,18 @@ export default function ViewDataSection() {
                           const isLoading = pcData?.loading ?? false
                           return (
                             <div className="p-2 bg-white rounded border border-gray-200 space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap flex items-center">
-                                  Open Interest:
-                                  {isLoading && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-nowrap flex items-center">
+                        <span className="font-semibold">Open Interest:</span>
+                        {data.change_in_open_interest_all !== undefined && data.open_interest_all !== 0 && (
+                          <span className={`ml-1 text-xs font-semibold ${(data.change_in_open_interest_all || 0) >= 0
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                            }`}>
+                            {(data.change_in_open_interest_all || 0) >= 0 ? '+' : ''}{((data.change_in_open_interest_all / data.open_interest_all) * 100).toFixed(2)}%
+                          </span>
+                        )}
+                        {isLoading && (
                                     <svg className="animate-spin ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -1140,7 +1305,17 @@ export default function ViewDataSection() {
                           <div className="space-y-1 text-sm">
                             {data.prod_merc_positions_long !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Long:
+                                  {data.change_in_prod_merc_long !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_prod_merc_long || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_prod_merc_long || 0) >= 0 ? '+' : ''}{((data.change_in_prod_merc_long / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.prod_merc_positions_long.toLocaleString()}
                                   {data.change_in_prod_merc_long !== undefined && (
@@ -1156,7 +1331,17 @@ export default function ViewDataSection() {
                             )}
                             {data.prod_merc_positions_short !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Short:
+                                  {data.change_in_prod_merc_short !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_prod_merc_short || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_prod_merc_short || 0) >= 0 ? '+' : ''}{((data.change_in_prod_merc_short / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.prod_merc_positions_short.toLocaleString()}
                                   {data.change_in_prod_merc_short !== undefined && (
@@ -1172,7 +1357,17 @@ export default function ViewDataSection() {
                             )}
                             {(data.prod_merc_positions_long !== undefined || data.prod_merc_positions_short !== undefined) && data.prod_merc_net !== undefined && (
                               <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="text-gray-600 font-semibold text-nowrap">
+                                  Net:
+                                  {(() => {
+                                    const change = (data.change_in_prod_merc_long || 0) - (data.change_in_prod_merc_short || 0);
+                                    return change !== 0 && data.open_interest_all && data.open_interest_all !== 0 && (
+                                      <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {change >= 0 ? '+' : ''}{((change / data.open_interest_all) * 100).toFixed(2)}%
+                                      </span>
+                                    );
+                                  })()}
+                                </span>
                                 <span className="font-medium">
                                   {data.prod_merc_net.toLocaleString()}
                                   {(() => {
@@ -1194,7 +1389,17 @@ export default function ViewDataSection() {
                           <div className="space-y-1 text-sm">
                             {data.swap_positions_long_all !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Long:
+                                  {data.change_in_swap_long_all !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_swap_long_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_swap_long_all || 0) >= 0 ? '+' : ''}{((data.change_in_swap_long_all / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.swap_positions_long_all.toLocaleString()}
                                   {data.change_in_swap_long_all !== undefined && (
@@ -1210,7 +1415,17 @@ export default function ViewDataSection() {
                             )}
                             {data.swap__positions_short_all !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Short:
+                                  {data.change_in_swap_short_all !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_swap_short_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_swap_short_all || 0) >= 0 ? '+' : ''}{((data.change_in_swap_short_all / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.swap__positions_short_all.toLocaleString()}
                                   {data.change_in_swap_short_all !== undefined && (
@@ -1226,7 +1441,17 @@ export default function ViewDataSection() {
                             )}
                             {(data.swap_positions_long_all !== undefined || data.swap__positions_short_all !== undefined) && data.swap_net !== undefined && (
                               <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="text-gray-600 font-semibold text-nowrap">
+                                  Net:
+                                  {(() => {
+                                    const change = (data.change_in_swap_long_all || 0) - (data.change_in_swap_short_all || 0);
+                                    return change !== 0 && data.open_interest_all && data.open_interest_all !== 0 && (
+                                      <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {change >= 0 ? '+' : ''}{((change / data.open_interest_all) * 100).toFixed(2)}%
+                                      </span>
+                                    );
+                                  })()}
+                                </span>
                                 <span className="font-medium">
                                   {data.swap_net.toLocaleString()}
                                   {(() => {
@@ -1248,7 +1473,17 @@ export default function ViewDataSection() {
                           <div className="space-y-1 text-sm">
                             {data.m_money_positions_long_all !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Long:
+                                  {data.change_in_m_money_long_all !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_m_money_long_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_m_money_long_all || 0) >= 0 ? '+' : ''}{((data.change_in_m_money_long_all / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.m_money_positions_long_all.toLocaleString()}
                                   {data.change_in_m_money_long_all !== undefined && (
@@ -1264,7 +1499,17 @@ export default function ViewDataSection() {
                             )}
                             {data.m_money_positions_short_all !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Short:
+                                  {data.change_in_m_money_short_all !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_m_money_short_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_m_money_short_all || 0) >= 0 ? '+' : ''}{((data.change_in_m_money_short_all / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.m_money_positions_short_all.toLocaleString()}
                                   {data.change_in_m_money_short_all !== undefined && (
@@ -1280,7 +1525,17 @@ export default function ViewDataSection() {
                             )}
                             {(data.m_money_positions_long_all !== undefined || data.m_money_positions_short_all !== undefined) && data.m_money_net !== undefined && (
                               <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="text-gray-600 font-semibold text-nowrap">
+                                  Net:
+                                  {(() => {
+                                    const change = (data.change_in_m_money_long_all || 0) - (data.change_in_m_money_short_all || 0);
+                                    return change !== 0 && data.open_interest_all && data.open_interest_all !== 0 && (
+                                      <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {change >= 0 ? '+' : ''}{((change / data.open_interest_all) * 100).toFixed(2)}%
+                                      </span>
+                                    );
+                                  })()}
+                                </span>
                                 <span className="font-medium">
                                   {data.m_money_net.toLocaleString()}
                                   {(() => {
@@ -1302,7 +1557,17 @@ export default function ViewDataSection() {
                           <div className="space-y-1 text-sm">
                             {data.other_rept_positions_long !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Long:
+                                  {data.change_in_other_rept_long !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_other_rept_long || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_other_rept_long || 0) >= 0 ? '+' : ''}{((data.change_in_other_rept_long / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.other_rept_positions_long.toLocaleString()}
                                   {data.change_in_other_rept_long !== undefined && (
@@ -1318,7 +1583,17 @@ export default function ViewDataSection() {
                             )}
                             {data.other_rept_positions_short !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Short:
+                                  {data.change_in_other_rept_short !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_other_rept_short || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_other_rept_short || 0) >= 0 ? '+' : ''}{((data.change_in_other_rept_short / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.other_rept_positions_short.toLocaleString()}
                                   {data.change_in_other_rept_short !== undefined && (
@@ -1334,7 +1609,17 @@ export default function ViewDataSection() {
                             )}
                             {(data.other_rept_positions_long !== undefined || data.other_rept_positions_short !== undefined) && data.other_rept_net !== undefined && (
                               <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="text-gray-600 font-semibold text-nowrap">
+                                  Net:
+                                  {(() => {
+                                    const change = (data.change_in_other_rept_long || 0) - (data.change_in_other_rept_short || 0);
+                                    return change !== 0 && data.open_interest_all && data.open_interest_all !== 0 && (
+                                      <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {change >= 0 ? '+' : ''}{((change / data.open_interest_all) * 100).toFixed(2)}%
+                                      </span>
+                                    );
+                                  })()}
+                                </span>
                                 <span className="font-medium">
                                   {data.other_rept_net.toLocaleString()}
                                   {(() => {
@@ -1356,7 +1641,17 @@ export default function ViewDataSection() {
                           <div className="space-y-1 text-sm">
                             {data.nonrept_positions_long_all !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Long:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Long:
+                                  {data.change_in_nonrept_long_all !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_nonrept_long_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_nonrept_long_all || 0) >= 0 ? '+' : ''}{((data.change_in_nonrept_long_all / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.nonrept_positions_long_all.toLocaleString()}
                                   {data.change_in_nonrept_long_all !== undefined && (
@@ -1372,7 +1667,17 @@ export default function ViewDataSection() {
                             )}
                             {data.nonrept_positions_short_all !== undefined && (
                               <div className="flex justify-between">
-                                <span className="text-gray-600 text-nowrap">Short:</span>
+                                <span className="text-gray-600 text-nowrap">
+                                  Short:
+                                  {data.change_in_nonrept_short_all !== undefined && data.open_interest_all && data.open_interest_all !== 0 && (
+                                    <span className={`ml-1 text-xs ${(data.change_in_nonrept_short_all || 0) >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                      }`}>
+                                      {(data.change_in_nonrept_short_all || 0) >= 0 ? '+' : ''}{((data.change_in_nonrept_short_all / data.open_interest_all) * 100).toFixed(2)}%
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="font-medium">
                                   {data.nonrept_positions_short_all.toLocaleString()}
                                   {data.change_in_nonrept_short_all !== undefined && (
@@ -1388,7 +1693,17 @@ export default function ViewDataSection() {
                             )}
                             {(data.nonrept_positions_long_all !== undefined || data.nonrept_positions_short_all !== undefined) && data.nonrept_net !== undefined && (
                               <div className="flex justify-between pt-1 border-t border-gray-100 mt-1">
-                                <span className="text-gray-600 font-semibold text-nowrap">Net:</span>
+                                <span className="text-gray-600 font-semibold text-nowrap">
+                                  Net:
+                                  {(() => {
+                                    const change = (data.change_in_nonrept_long_all || 0) - (data.change_in_nonrept_short_all || 0);
+                                    return change !== 0 && data.open_interest_all && data.open_interest_all !== 0 && (
+                                      <span className={`ml-1 text-xs ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {change >= 0 ? '+' : ''}{((change / data.open_interest_all) * 100).toFixed(2)}%
+                                      </span>
+                                    );
+                                  })()}
+                                </span>
                                 <span className="font-medium">
                                   {data.nonrept_net.toLocaleString()}
                                   {(() => {
