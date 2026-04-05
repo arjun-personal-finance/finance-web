@@ -210,7 +210,7 @@ export default function ViewDataSection() {
   // Daily Lens state - tracks which report date has Daily Lens expanded
   const [expandedDailyLensDate, setExpandedDailyLensDate] = useState<string | null>(null)
   // Daily Lens data - keyed by report date
-  const [dailyLensData, setDailyLensData] = useState<Record<string, { date: string; absChange: number; pctChange: number; volume: number | null }[]>>({})
+  const [dailyLensData, setDailyLensData] = useState<Record<string, { date: string; close: number; absChange: number; pctChange: number; volume: number | null }[]>>({})
   // Daily Lens loading state
   const [dailyLensLoading, setDailyLensLoading] = useState<Record<string, boolean>>({})
 
@@ -253,7 +253,7 @@ export default function ViewDataSection() {
 
       // Calculate daily changes for each trading day
       // Each day's change = that day's close vs previous trading day's close
-      const dailyChanges: { date: string; absChange: number; pctChange: number; volume: number | null }[] = []
+      const dailyChanges: { date: string; close: number; absChange: number; pctChange: number; volume: number | null }[] = []
 
       for (let i = 1; i < priceData.length; i++) {
         const prevDay = priceData[i - 1]
@@ -266,6 +266,7 @@ export default function ViewDataSection() {
           const pctChange = (absChange / prevClose) * 100
           dailyChanges.push({
             date: currDay.date,
+            close: currClose,
             absChange,
             pctChange,
             volume: currDay.volume || null
@@ -868,6 +869,7 @@ export default function ViewDataSection() {
                                 dailyLensData[reportDate].map((day, idx) => (
                                   <div key={idx} className="text-xs flex justify-between items-center">
                                     <span className="text-gray-600">{formatDailyLensDate(day.date)}:</span>
+                                    <span className="text-gray-500 text-xs">Close: {day.close.toFixed(2)}</span>
                                     <span className={`font-medium ${(day.absChange || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                                       {((day.absChange || 0) >= 0 ? '+' : '')}{day.absChange.toFixed(2)} ({(day.pctChange || 0) >= 0 ? '+' : ''}{day.pctChange.toFixed(2)}%)
                                     </span>
@@ -1443,6 +1445,7 @@ export default function ViewDataSection() {
                                           dailyLensData[reportDate].map((day, idx) => (
                                             <div key={idx} className="text-xs flex justify-between items-center">
                                               <span className="text-gray-600">{formatDailyLensDate(day.date)}:</span>
+                                              <span className="text-gray-500 text-xs">Close: {day.close.toFixed(2)}</span>
                                               <span className={`font-medium ${(day.absChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 {((day.absChange || 0) >= 0 ? '+' : '')}{day.absChange.toFixed(2)} ({(day.pctChange || 0) >= 0 ? '+' : ''}{day.pctChange.toFixed(2)}%)
                                               </span>
