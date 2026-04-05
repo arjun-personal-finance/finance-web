@@ -1324,7 +1324,7 @@ export default function ViewDataSection() {
           <h3 className="font-semibold mb-2">
             Historical Data ({historicalData.length} records)
           </h3>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="space-y-2 max-h-[800px] overflow-y-auto">
             {historicalData.map((data, idx) => {
               const isExpanded = expandedCardIndex === idx
               return (
