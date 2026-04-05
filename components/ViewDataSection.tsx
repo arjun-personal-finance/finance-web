@@ -686,6 +686,8 @@ export default function ViewDataSection() {
   // Effect to clear price change data when commodity changes
   useEffect(() => {
     setPriceChangeData({})
+    setDailyLensData({})
+    setExpandedDailyLensDate(null)
   }, [commodity])
 
   // Effect to fetch price changes when a historical card is expanded
@@ -855,7 +857,15 @@ export default function ViewDataSection() {
                             }}
                             className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-1 rounded"
                           >
-                            <span className="text-gray-600 font-semibold text-nowrap">Daily Lens:</span>
+                            <span className="text-gray-600 font-semibold text-nowrap flex items-center">
+                              Daily Lens:
+                              {reportDate && dailyLensLoading[reportDate] && (
+                                <svg className="animate-spin ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              )}
+                            </span>
                             <span className="text-gray-400 text-xs">
                               {expandedDailyLensDate === reportDate ? '▲' : '▶'}
                             </span>
@@ -873,11 +883,6 @@ export default function ViewDataSection() {
                                     <span className={`font-medium ${(day.absChange || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                                       {((day.absChange || 0) >= 0 ? '+' : '')}{day.absChange.toFixed(2)} ({(day.pctChange || 0) >= 0 ? '+' : ''}{day.pctChange.toFixed(2)}%)
                                     </span>
-                                    {day.volume !== null && (
-                                      <span className="text-gray-500 text-xs ml-2">
-                                        Vol: {day.volume.toLocaleString()}
-                                      </span>
-                                    )}
                                   </div>
                                 ))
                               ) : (
@@ -1431,7 +1436,15 @@ export default function ViewDataSection() {
                                       }}
                                       className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-1 rounded"
                                     >
-                                      <span className="text-gray-600 font-semibold text-nowrap">Daily Lens:</span>
+                                      <span className="text-gray-600 font-semibold text-nowrap flex items-center">
+                                        Daily Lens:
+                                        {reportDate && dailyLensLoading[reportDate] && (
+                                          <svg className="animate-spin ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                          </svg>
+                                        )}
+                                      </span>
                                       <span className="text-gray-400 text-xs">
                                         {expandedDailyLensDate === reportDate ? '▲' : '▶'}
                                       </span>
@@ -1449,11 +1462,6 @@ export default function ViewDataSection() {
                                               <span className={`font-medium ${(day.absChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 {((day.absChange || 0) >= 0 ? '+' : '')}{day.absChange.toFixed(2)} ({(day.pctChange || 0) >= 0 ? '+' : ''}{day.pctChange.toFixed(2)}%)
                                               </span>
-                                              {day.volume !== null && (
-                                                <span className="text-gray-500 text-xs ml-2">
-                                                  Vol: {day.volume.toLocaleString()}
-                                                </span>
-                                              )}
                                             </div>
                                           ))
                                         ) : (
